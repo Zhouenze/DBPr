@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 
@@ -34,7 +35,7 @@ public abstract class Operator {
 	 * @param f
 	 * 		Stream to be dump to.
 	 */
-	public abstract void dump(OutputStream f);
+	public abstract void dump(OutputStream f) throws IOException;
 	
 	/*
 	 * Method that print the information of this node.

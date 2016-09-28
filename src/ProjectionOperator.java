@@ -1,4 +1,7 @@
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Vector;
 
 /*
@@ -30,7 +33,18 @@ public class ProjectionOperator extends Operator {
 	@Override
 	public Tuple getNextTuple() {
 		// TODO Auto-generated method stub
-		return null;
+		Tuple childnext = child.getNextTuple();
+		if (childnext == null || selectAll) {
+			return childnext;
+		}
+		// projection
+		// based on childnext's schema and projNames
+		Tuple proj = new Tuple();
+		for(String attr: projNames) {
+			int index = child.schema.get(attr);
+			proj.data.add((childnext.data.get(index)));
+		}
+		return proj;
 	}
 
 	/*
@@ -40,6 +54,7 @@ public class ProjectionOperator extends Operator {
 	@Override
 	public void reset() {
 		// TODO Auto-generated method stub
+		child.reset();
 		
 	}
 
@@ -50,8 +65,19 @@ public class ProjectionOperator extends Operator {
 	 * 		Stream to be dump to.
 	 */
 	@Override
-	public void dump(OutputStream f) {
+	public void dump(OutputStream f) throws IOException {
 		// TODO Auto-generated method stub
+		try{
+			while(this.getNextTuple() != null) {
+				for(int i: this.getNextTuple().data) {
+					f.write(i); // only the first byte..
+				}
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+		} finally {
+			f.close();
+		}
 		
 	}
 

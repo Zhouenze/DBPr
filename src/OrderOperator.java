@@ -1,4 +1,5 @@
 import java.io.OutputStream;
+import java.util.PriorityQueue;
 import java.util.Vector;
 
 /*
@@ -10,6 +11,7 @@ import java.util.Vector;
  */
 public class OrderOperator extends Operator {
 
+	public PriorityQueue<Tuple> heap;   // Buffer to store all child tuples.
 	public Vector<String> orderAttrs;	// Strings that indicates column names that is to be ordered by.
 										// If not included here, the smaller the index the higher the priority.
 	
@@ -18,6 +20,7 @@ public class OrderOperator extends Operator {
 	 */
 	public OrderOperator() {
 		super();
+		heap = null;
 		orderAttrs = new Vector<>();
 	}
 	
@@ -29,7 +32,15 @@ public class OrderOperator extends Operator {
 	@Override
 	public Tuple getNextTuple() {
 		// TODO Auto-generated method stub
-		return null;
+		if (heap == null) {
+			// call helper method to construct heap of all child tuples
+			buildHeap();
+		}
+		if (heap.isEmpty()) {
+			return null;
+		}
+		
+		return heap.poll();
 	}
 
 	/*
@@ -39,7 +50,8 @@ public class OrderOperator extends Operator {
 	@Override
 	public void reset() {
 		// TODO Auto-generated method stub
-		
+		child.reset();
+		heap = null;
 	}
 
 	/*
@@ -72,5 +84,21 @@ public class OrderOperator extends Operator {
 	public void buildSchema() {
 		child.buildSchema();
 		schema = child.schema;
+	}
+	
+	/*
+	 * Method to put all output tuples of child in heap, in order to perform sorting.
+	 */
+	public void buildHeap(){
+		heap = new PriorityQueue<Tuple>();
+		// update orderAttrsIndex in Tuple based on orderAttrs
+		Tuple.orderAttrsIndex = new Vector<Integer>();
+		for(String attr: orderAttrs) {
+			Tuple.orderAttrsIndex.add(schema.get(attr));
+		}
+		while(child.getNextTuple() != null) {
+			heap.offer(child.getNextTuple());
+		}
+		// could be empty!
 	}
 }
