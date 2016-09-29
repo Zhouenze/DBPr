@@ -1,4 +1,11 @@
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.OutputStream;
+
+
 
 /*
  * Scan Operator
@@ -12,14 +19,52 @@ public class ScanOperator extends CondOperator {
 	public String fileName;		// File name that is to be scanned. Full path can be obtained by inferring DBCatalog.
 	public String alias;		// Alias of this file. If no alias is provided, it will be the same as the fileName to simplify program.
 
+	public BufferedReader bufferedReader;
+	public boolean file_read = false;
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
+	
+
+
 	@Override
 	public Tuple getNextTuple() {
 		// TODO Auto-generated method stub
+		if (!file_read) {
+			FileReader fileReader;
+			try {
+				fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"db/data/"+fileName);
+				bufferedReader= new BufferedReader(fileReader);
+				file_read = true;
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		String line;
+		boolean failed = false;
+		try {	
+			while ((line = bufferedReader.readLine()) != null){
+				Tuple retTuple = new Tuple(line);
+				for (Condition c: conditions){
+					if (!c.test(retTuple, schema)) {
+						failed = true;
+						break;
+					}
+				}
+				if (failed){
+					failed = false;
+					continue;
+				}
+				return retTuple;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 
@@ -30,7 +75,16 @@ public class ScanOperator extends CondOperator {
 	@Override
 	public void reset() {
 		// TODO Auto-generated method stub
-		
+		FileReader fileReader;
+		try {
+			fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"/db/data/"+fileName);
+			bufferedReader= new BufferedReader(fileReader);
+			file_read = true;
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	/*
