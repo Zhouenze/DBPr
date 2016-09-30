@@ -26,12 +26,8 @@ public class ScanOperator extends CondOperator {
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
-	
-
-
 	@Override
 	public Tuple getNextTuple() {
-		// TODO Auto-generated method stub
 		if (!file_read) {
 			FileReader fileReader;
 			try {
@@ -39,7 +35,6 @@ public class ScanOperator extends CondOperator {
 				bufferedReader= new BufferedReader(fileReader);
 				file_read = true;
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -62,7 +57,6 @@ public class ScanOperator extends CondOperator {
 				return retTuple;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -74,29 +68,14 @@ public class ScanOperator extends CondOperator {
 	 */
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
 		FileReader fileReader;
 		try {
 			fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"/db/data/"+fileName);
 			bufferedReader= new BufferedReader(fileReader);
 			file_read = true;
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-	}
-
-	/*
-	 * Method that dump all the output of this node to a stream.
-	 * @override from super class Operator
-	 * @param f
-	 * 		Stream to be dump to.
-	 */
-	@Override
-	public void dump(OutputStream f) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/*

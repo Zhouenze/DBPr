@@ -11,19 +11,20 @@ import java.util.Vector;
  */
 public class DistinctOperator extends Operator {
 	
+	public HashSet<Vector<Integer>> appeared;
+	
+    public DistinctOperator() {
+    	super();
+		appeared = new HashSet<>();
+	}
+    
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
-	public HashSet<Vector<Integer>> appeared;
-    public DistinctOperator() {
-		// TODO Auto-generated constructor stub
-		appeared = new HashSet<>();
-	}
 	@Override
 	public Tuple getNextTuple() {
-		// TODO Auto-generated method stub
 		Tuple T;
 		while ((T=child.getNextTuple()) != null) {
 			if (!appeared.contains(T.data)){
@@ -40,21 +41,8 @@ public class DistinctOperator extends Operator {
 	 */
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
 		appeared.clear();
 		child.reset();
-	}
-
-	/*
-	 * Method that dump all the output of this node to a stream.
-	 * @override from super class Operator
-	 * @param f
-	 * 		Stream to be dump to.
-	 */
-	@Override
-	public void dump(OutputStream f) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/*

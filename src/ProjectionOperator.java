@@ -32,7 +32,6 @@ public class ProjectionOperator extends Operator {
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		// TODO Auto-generated method stub
 		Tuple childnext = child.getNextTuple();
 		if (childnext == null || selectAll) {
 			return childnext;
@@ -53,32 +52,7 @@ public class ProjectionOperator extends Operator {
 	 */
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
 		child.reset();
-		
-	}
-
-	/*
-	 * Method that dump all the output of this node to a stream.
-	 * @override from super class Operator
-	 * @param f
-	 * 		Stream to be dump to.
-	 */
-	@Override
-	public void dump(OutputStream f) throws IOException {
-		// TODO Auto-generated method stub
-		try{
-			while(this.getNextTuple() != null) {
-				for(int i: this.getNextTuple().data) {
-					f.write(i); // only the first byte..
-				}
-			}
-		} catch(IOException e) {
-			e.printStackTrace();
-		} finally {
-			f.close();
-		}
-		
 	}
 
 	/*

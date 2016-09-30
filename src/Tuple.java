@@ -8,8 +8,8 @@ import java.util.Vector;
  */
 public class Tuple implements Comparable<Tuple>{
 	
-	public static Vector<Integer> orderAttrsIndex = null; // Index of attrs needed to be sorted, in descending priority
-	public Vector<Integer> data;				// Integers in this Tuple.
+	public static Vector<Integer> orderAttrsIndex = null; 	// Index of attrs needed to be sorted, in descending priority
+	public Vector<Integer> data;							// Integers in this Tuple.
 	
 	/*
 	 * Constructor that construct a tuple with no data
@@ -34,21 +34,18 @@ public class Tuple implements Comparable<Tuple>{
 	 * Print this tuple.
 	 */
 	public void print() {
-		for (Integer inti : data) {
-			System.out.print(inti);
-		}
+		for (Integer inti : data)
+			System.out.print(inti + " ");
 		System.out.println();
 	}
 	
 	@Override
-	public int compareTo(Tuple tp) {
-		
+	public int compareTo(Tuple tp) {		
 		for(int index: orderAttrsIndex) {
 			int result = this.data.get(index).compareTo(tp.data.get(index));
 			if(result != 0) {
 				return result;
 			}
-//			continue;
 		}
 		return 0;
 	}

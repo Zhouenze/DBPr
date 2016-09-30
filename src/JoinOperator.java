@@ -11,6 +11,16 @@ import java.io.OutputStream;
 public class JoinOperator extends CondOperator {
 	
 	public Operator rChild;		// The right child of this operator.
+	public Tuple left;			// The left tuple now. This need to be an element of class
+								// because it should keep between different calls to getNextTuple().
+	boolean end;				// denote whether this node has already be fully got.
+	
+	public JoinOperator() {
+		super();
+		rChild = null;
+		left = null;
+		end = false;
+	}
 
 	/*
 	 * Method that return next tuple in the output of this node.
@@ -19,9 +29,17 @@ public class JoinOperator extends CondOperator {
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		// TODO Auto-generated method stub
-		Tuple left, right;
-		while((left = child.getNextTuple()) != null) {
+		// if this join has ended, return null, prevent restart.
+		if (end)
+			return null;
+		
+		// if first call, left is still null. give it a new value as start.
+		if (left == null)
+			left = child.getNextTuple();
+		
+		// if left meets null, it means nothing can be found.
+		while(left != null) {
+			Tuple right;
 			while((right = rChild.getNextTuple()) != null) {				
 				// concatenate left & right
 				Tuple join = new Tuple();
@@ -32,31 +50,26 @@ public class JoinOperator extends CondOperator {
 					join.data.add(j);
 				}
 				
-				// test
-				if(conditions == null) { // if cross product
-					return join;
-				} else { // test through all conditions
-					for(int i = 0; i < conditions.size(); i++) {
-						Condition c = conditions.get(i);
-						if(!c.test(join, schema)) {
-							break;
-						}
-						// do something to join according to the condition
-						
-						if(i == conditions.size() - 1) {
-							return join;
-						}
+				// conditions always exist.
+				for(int i = 0; i < conditions.size(); i++) {
+					Condition c = conditions.get(i);
+					if(!c.test(join, schema)) {
+						break;
 					}
-					// failed condition test
-//					continue;
+					// do something to join according to the condition
+					
+					if(i == conditions.size() - 1) {
+						return join;
+					}
 				}
 				
 			}
-			// reset inner child
+			// reset inner child. Only when this time will need to get next left child.
 			rChild.reset();
+			left = child.getNextTuple();
 		}
+		end = true;
 		return null;
-		
 	}
 
 	/*
@@ -65,21 +78,10 @@ public class JoinOperator extends CondOperator {
 	 */
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
+		end = false;
+		left = null;
 		child.reset();
 		rChild.reset();
-	}
-
-	/*
-	 * Method that dump all the output of this node to a stream.
-	 * @override from super class Operator
-	 * @param f
-	 * 		Stream to be dump to.
-	 */
-	@Override
-	public void dump(OutputStream f) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/*

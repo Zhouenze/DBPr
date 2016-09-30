@@ -31,7 +31,6 @@ public class OrderOperator extends Operator {
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		// TODO Auto-generated method stub
 		if (heap == null) {
 			// call helper method to construct heap of all child tuples
 			buildHeap();
@@ -49,21 +48,8 @@ public class OrderOperator extends Operator {
 	 */
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
 		child.reset();
 		heap = null;
-	}
-
-	/*
-	 * Method that dump all the output of this node to a stream.
-	 * @override from super class Operator
-	 * @param f
-	 * 		Stream to be dump to.
-	 */
-	@Override
-	public void dump(OutputStream f) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/*
