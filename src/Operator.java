@@ -1,6 +1,6 @@
 import java.io.OutputStream;
 import java.util.HashMap;
-
+//
 /*
  * Base class for all the operators
  * Provide some common methods that all operators should implement.
