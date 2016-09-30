@@ -37,6 +37,7 @@ public class Tuple implements Comparable<Tuple>{
 		for (Integer inti : data) {
 			System.out.print(inti);
 		}
+		System.out.println();
 	}
 	
 	@Override
@@ -47,7 +48,7 @@ public class Tuple implements Comparable<Tuple>{
 			if(result != 0) {
 				return result;
 			}
-			continue;
+//			continue;
 		}
 		return 0;
 	}

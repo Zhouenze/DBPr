@@ -93,11 +93,20 @@ public class OrderOperator extends Operator {
 		heap = new PriorityQueue<Tuple>();
 		// update orderAttrsIndex in Tuple based on orderAttrs
 		Tuple.orderAttrsIndex = new Vector<Integer>();
+		boolean[] inAttrs = new boolean[schema.size()];
+		for (int i = 0; i < inAttrs.length; ++i)
+			inAttrs[i] = false;
 		for(String attr: orderAttrs) {
 			Tuple.orderAttrsIndex.add(schema.get(attr));
+			inAttrs[schema.get(attr)] = true;
 		}
-		while(child.getNextTuple() != null) {
-			heap.offer(child.getNextTuple());
+		for (int i = 0; i < inAttrs.length; ++i)
+			if (!inAttrs[i])
+				Tuple.orderAttrsIndex.add(i);
+		
+		Tuple temp;
+		while((temp = child.getNextTuple()) != null) {
+			heap.offer(temp);
 		}
 		// could be empty!
 	}

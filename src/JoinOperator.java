@@ -20,11 +20,9 @@ public class JoinOperator extends CondOperator {
 	@Override
 	public Tuple getNextTuple() {
 		// TODO Auto-generated method stub
-		while(child.getNextTuple() != null) {
-			Tuple left = child.getNextTuple();
-			while(rChild.getNextTuple() != null) {
-				Tuple right = rChild.getNextTuple();
-				
+		Tuple left, right;
+		while((left = child.getNextTuple()) != null) {
+			while((right = rChild.getNextTuple()) != null) {				
 				// concatenate left & right
 				Tuple join = new Tuple();
 				for(int i: left.data) {
@@ -50,7 +48,7 @@ public class JoinOperator extends CondOperator {
 						}
 					}
 					// failed condition test
-					continue;
+//					continue;
 				}
 				
 			}
@@ -69,6 +67,7 @@ public class JoinOperator extends CondOperator {
 	public void reset() {
 		// TODO Auto-generated method stub
 		child.reset();
+		rChild.reset();
 	}
 
 	/*
