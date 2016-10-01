@@ -9,7 +9,7 @@ import java.util.Vector;
  * Operator that get some of the columns of its child operator.
  * @superclass Operator
  * 
- * @authors Enze Zhou ez242
+ * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
 public class ProjectionOperator extends Operator {
 	
@@ -26,7 +26,7 @@ public class ProjectionOperator extends Operator {
 	}
 
 	/*
-	 * Method that return next tuple in the output of this node.
+	 * Method that returns next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
@@ -47,7 +47,7 @@ public class ProjectionOperator extends Operator {
 	}
 
 	/*
-	 * Method that reset output of this node to the beginning.
+	 * Method that resets output of this node to the beginning.
 	 * @override from super class Operator
 	 */
 	@Override
@@ -56,7 +56,7 @@ public class ProjectionOperator extends Operator {
 	}
 
 	/*
-	 * Method that print the information of this node.
+	 * Method that prints the information of this node.
 	 * @override from super class Operator
 	 */
 	@Override
@@ -66,7 +66,7 @@ public class ProjectionOperator extends Operator {
 	}
 
 	/*
-	 * Method that build output schema of this node.
+	 * Method that builds output schema of this node.
 	 * @override from super class Operator
 	 */
 	@Override

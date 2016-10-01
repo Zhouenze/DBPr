@@ -4,7 +4,7 @@ import java.util.Vector;
  * Tuple
  * Class that represents a tuple.
  * 
- * @author Enze Zhou ez242
+ * @author Enze Zhou ez242, Shuang Zhang sz468
  */
 public class Tuple implements Comparable<Tuple>{
 	
@@ -12,14 +12,14 @@ public class Tuple implements Comparable<Tuple>{
 	public Vector<Integer> data;							// Integers in this Tuple.
 	
 	/*
-	 * Constructor that construct a tuple with no data
+	 * Constructor that constructs a tuple with no data
 	 */
 	public Tuple() {
 		data = new Vector<Integer>();
 	}
 	
 	/*
-	 * Constructor that fetch data from a tuple string read from a file.
+	 * Constructor that fetches data from a tuple string read from a file.
 	 * @param str
 	 * 		String that build a tuple from
 	 */
@@ -39,6 +39,12 @@ public class Tuple implements Comparable<Tuple>{
 		System.out.println();
 	}
 	
+	/*
+	 * Method that defines how tuples are sorted
+	 * according to attributes, their indices and priorities.
+	 * @param tp
+	 *       Tuple with which we are comparing this tuple
+	 */
 	@Override
 	public int compareTo(Tuple tp) {		
 		for(int index: orderAttrsIndex) {

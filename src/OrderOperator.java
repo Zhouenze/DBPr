@@ -7,7 +7,7 @@ import java.util.Vector;
  * Operator that order its child's output in ascending order.
  * @superclass Operator
  * 
- * @authors Enze Zhou ez242
+ * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
 public class OrderOperator extends Operator {
 
@@ -16,7 +16,7 @@ public class OrderOperator extends Operator {
 										// If not included here, the smaller the index the higher the priority.
 	
 	/*
-	 * Constructor that simply alls super() and initiate orderAttrs.
+	 * Constructor that simply calls super() and initiate orderAttrs.
 	 */
 	public OrderOperator() {
 		super();
@@ -25,7 +25,7 @@ public class OrderOperator extends Operator {
 	}
 	
 	/*
-	 * Method that return next tuple in the output of this node.
+	 * Method that returns next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
@@ -43,7 +43,7 @@ public class OrderOperator extends Operator {
 	}
 
 	/*
-	 * Method that reset output of this node to the beginning.
+	 * Method that resets output of this node to the beginning.
 	 * @override from super class Operator
 	 */
 	@Override
@@ -53,7 +53,7 @@ public class OrderOperator extends Operator {
 	}
 
 	/*
-	 * Method that print the information of this node.
+	 * Method that prints the information of this node.
 	 * @override from super class Operator
 	 */
 	@Override
@@ -63,7 +63,7 @@ public class OrderOperator extends Operator {
 	}
 
 	/*
-	 * Method that build output schema of this node.
+	 * Method that builds output schema of this node.
 	 * @override from super class Operator
 	 */
 	@Override

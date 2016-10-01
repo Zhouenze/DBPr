@@ -6,7 +6,7 @@ import java.io.OutputStream;
  * Inherited from CondOperator to have a conditions vector that is used to filter the output tuples of this node.
  * @superclass CondOperator
  * 
- * @authors Enze Zhou ez242
+ * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
 public class JoinOperator extends CondOperator {
 	
@@ -23,7 +23,7 @@ public class JoinOperator extends CondOperator {
 	}
 
 	/*
-	 * Method that return next tuple in the output of this node.
+	 * Method that returns next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
@@ -56,7 +56,6 @@ public class JoinOperator extends CondOperator {
 					if(!c.test(join, schema)) {
 						break;
 					}
-					// do something to join according to the condition
 					
 					if(i == conditions.size() - 1) {
 						return join;
@@ -73,7 +72,7 @@ public class JoinOperator extends CondOperator {
 	}
 
 	/*
-	 * Method that reset output of this node to the beginning.
+	 * Method that resets output of this node to the beginning.
 	 * @override from super class Operator
 	 */
 	@Override
@@ -85,7 +84,7 @@ public class JoinOperator extends CondOperator {
 	}
 
 	/*
-	 * Method that print the information of this node.
+	 * Method that prints the information of this node.
 	 * @override from super class Operator
 	 */
 	@Override
@@ -102,7 +101,7 @@ public class JoinOperator extends CondOperator {
 	}
 
 	/*
-	 * Method that build output schema of this node.
+	 * Method that builds output schema of this node.
 	 * @override from super class Operator
 	 */
 	@Override
