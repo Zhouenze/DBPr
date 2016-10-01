@@ -12,15 +12,15 @@ import java.io.OutputStream;
  * Scan a file and output its tuples one by one. Inherited from CondOperator to have a conditions vector that is used to filter the output of this node.
  * @superclass CondOperator
  * 
- * @authors Enze Zhou ez242
+ * @authors Enze Zhou ez242 Weicheng Yu wy248
  */
 public class ScanOperator extends CondOperator {
 	
 	public String fileName;		// File name that is to be scanned. Full path can be obtained by inferring DBCatalog.
 	public String alias;		// Alias of this file. If no alias is provided, it will be the same as the fileName to simplify program.
 
-	public BufferedReader bufferedReader;
-	public boolean file_read = false;
+	public BufferedReader bufferedReader;		//keep track of which line in file is being read
+	public boolean file_read = false; 		//flag that checks whether the file specified has been open
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
@@ -44,8 +44,8 @@ public class ScanOperator extends CondOperator {
 		try {	
 			while ((line = bufferedReader.readLine()) != null){
 				Tuple retTuple = new Tuple(line);
-				for (Condition c: conditions){
-					if (!c.test(retTuple, schema)) {
+				for (Condition c: conditions){		
+					if (!c.test(retTuple, schema)) {		//if any test fails, set failed and check next ccondition
 						failed = true;
 						break;
 					}
@@ -70,8 +70,8 @@ public class ScanOperator extends CondOperator {
 	public void reset() {
 		FileReader fileReader;
 		try {
-			fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"/db/data/"+fileName);
-			bufferedReader= new BufferedReader(fileReader);
+			fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"/db/data/"+fileName);		//reopen file
+			bufferedReader= new BufferedReader(fileReader);		//also need to set public variables stored in ScanOperator
 			file_read = true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
