@@ -1,3 +1,4 @@
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import net.sf.jsqlparser.parser.CCJSqlParser;
@@ -38,6 +39,7 @@ public class DBPrPro2Main {
 			Statement statement;
 			
 			// For every select statement.
+			int i = 1;
 			while ((statement = sqlParser.Statement()) != null) {
 				try {
 					// Output the original statement.
@@ -45,11 +47,12 @@ public class DBPrPro2Main {
 					// Parse it and show parse result.
 					myParser myPar = new myParser();
 					Operator root = myPar.parseSelect((Select) statement);
-					root.print();
-					System.out.println();
-					
-					// TODO: analyze this tree and get the result.
-					
+//					root.print();
+//					root.dump(null);
+//					System.out.println();
+//					root.reset();
+					root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+
 				// Catch every exception so that the program can go on to next statement.
 				} catch (Exception e) {
 					System.err.println("Exception occurred for statement: " + statement);

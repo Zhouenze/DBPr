@@ -1,14 +1,25 @@
-import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Vector;
 
 /*
  * Distinct operator
  * Build output by deduplicating output of its child Operator.
  * @superclass Operator
  * 
- * @authors Enze Zhou ez242
+ * @authors Enze Zhou ez242, Weicheng Yu wy248
  */
 public class DistinctOperator extends Operator {
 	
+	public HashSet<Vector<Integer>> appeared;		//hashset to store all tuple data that have been seen
+	
+	/*
+	 * Constructor simply calls super and initialize new element.
+	 */
+    public DistinctOperator() {
+    	super();
+		appeared = new HashSet<>();
+	}
+    
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
@@ -16,7 +27,13 @@ public class DistinctOperator extends Operator {
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		// TODO Auto-generated method stub
+		Tuple T;
+		while ((T=child.getNextTuple()) != null) {
+			if (!appeared.contains(T.data)){		
+				appeared.add(T.data);		//add data to hashset if not already seen
+				return T;
+			}
+		}
 		return null;
 	}
 
@@ -26,20 +43,8 @@ public class DistinctOperator extends Operator {
 	 */
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/*
-	 * Method that dump all the output of this node to a stream.
-	 * @override from super class Operator
-	 * @param f
-	 * 		Stream to be dump to.
-	 */
-	@Override
-	public void dump(OutputStream f) {
-		// TODO Auto-generated method stub
-		
+		appeared.clear();		//need to clear variable appeared in this class
+		child.reset();
 	}
 
 	/*

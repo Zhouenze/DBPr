@@ -1,3 +1,5 @@
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 //
@@ -31,10 +33,18 @@ public abstract class Operator {
 	
 	/*
 	 * Method that dump all the output of this node to a stream.
-	 * @param f
+	 * @param out
 	 * 		Stream to be dump to.
 	 */
-	public abstract void dump(OutputStream f);
+	public void dump(OutputStream out) throws IOException {
+		DataOutputStream dataOut = new DataOutputStream((out == null ? System.out : out));
+		Tuple temp;
+		while ((temp = this.getNextTuple()) != null) {
+			for (int i = 0; i < temp.data.size(); ++i)
+				dataOut.writeBytes((i == 0 ? temp.data.get(i).toString() : "," + temp.data.get(i)));
+			dataOut.write('\n');
+		}
+	}
 	
 	/*
 	 * Method that print the information of this node.
