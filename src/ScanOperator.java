@@ -3,9 +3,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
-
-
 
 /*
  * Scan Operator
@@ -20,7 +17,8 @@ public class ScanOperator extends CondOperator {
 	public String alias;		// Alias of this file. If no alias is provided, it will be the same as the fileName to simplify program.
 
 	public BufferedReader bufferedReader;		//keep track of which line in file is being read
-	public boolean file_read = false; 		//flag that checks whether the file specified has been open
+	public boolean file_read = false; 			//flag that checks whether the file specified has been open
+	
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator

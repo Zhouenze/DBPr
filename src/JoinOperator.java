@@ -1,4 +1,3 @@
-import java.io.OutputStream;
 
 /*
  * Join Operator
@@ -15,6 +14,9 @@ public class JoinOperator extends CondOperator {
 								// because it should keep between different calls to getNextTuple().
 	boolean end;				// denote whether this node has already be fully got.
 	
+	/*
+	 * Constructor simply calls super and initialize new elements.
+	 */
 	public JoinOperator() {
 		super();
 		rChild = null;

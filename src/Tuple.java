@@ -4,7 +4,7 @@ import java.util.Vector;
  * Tuple
  * Class that represents a tuple.
  * 
- * @author Enze Zhou ez242, Shuang Zhang sz468
+ * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
 public class Tuple implements Comparable<Tuple>{
 	

@@ -47,10 +47,10 @@ public class DBPrPro2Main {
 					// Parse it and show parse result.
 					myParser myPar = new myParser();
 					Operator root = myPar.parseSelect((Select) statement);
-					root.print();
-					root.dump(null);
-					System.out.println();
-					root.reset();
+//					root.print();
+//					root.dump(null);
+//					System.out.println();
+//					root.reset();
 					root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
 
 				// Catch every exception so that the program can go on to next statement.

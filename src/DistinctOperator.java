@@ -1,4 +1,3 @@
-import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Vector;
 
@@ -7,12 +6,15 @@ import java.util.Vector;
  * Build output by deduplicating output of its child Operator.
  * @superclass Operator
  * 
- * @authors Enze Zhou ez242 Weicheng Yu wy248
+ * @authors Enze Zhou ez242, Weicheng Yu wy248
  */
 public class DistinctOperator extends Operator {
 	
 	public HashSet<Vector<Integer>> appeared;		//hashset to store all tuple data that have been seen
 	
+	/*
+	 * Constructor simply calls super and initialize new element.
+	 */
     public DistinctOperator() {
     	super();
 		appeared = new HashSet<>();

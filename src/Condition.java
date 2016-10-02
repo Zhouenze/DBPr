@@ -31,7 +31,7 @@ public class Condition {
 			operator = op.le;
 		} else if (parts[1].equals(">=")) {
 			operator = op.ge;
-		} else if (parts[1].equals("!=")) {
+		} else if (parts[1].equals("<>")) {
 			operator = op.ne;
 		} else if (parts[1].equals("<")) {
 			operator = op.l;
