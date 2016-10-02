@@ -7,11 +7,11 @@ import java.util.Vector;
  * Build output by deduplicating output of its child Operator.
  * @superclass Operator
  * 
- * @authors Enze Zhou ez242
+ * @authors Enze Zhou ez242 Weicheng Yu wy248
  */
 public class DistinctOperator extends Operator {
 	
-	public HashSet<Vector<Integer>> appeared;
+	public HashSet<Vector<Integer>> appeared;		//hashset to store all tuple data that have been seen
 	
     public DistinctOperator() {
     	super();
@@ -27,8 +27,8 @@ public class DistinctOperator extends Operator {
 	public Tuple getNextTuple() {
 		Tuple T;
 		while ((T=child.getNextTuple()) != null) {
-			if (!appeared.contains(T.data)){
-				appeared.add(T.data);
+			if (!appeared.contains(T.data)){		
+				appeared.add(T.data);		//add data to hashset if not already seen
 				return T;
 			}
 		}
@@ -41,7 +41,7 @@ public class DistinctOperator extends Operator {
 	 */
 	@Override
 	public void reset() {
-		appeared.clear();
+		appeared.clear();		//need to clear variable appeared in this class
 		child.reset();
 	}
 
