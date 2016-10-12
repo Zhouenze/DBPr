@@ -2,14 +2,14 @@
 /*
  * Join Operator
  * Operator that joins the outputs of its two children, both are Scan Operators inferred by Operator pointer.
- * Inherited from CondOperator to have a conditions vector that is used to filter the output tuples of this node.
- * @superclass CondOperator
+ * Inherited from PhyCondOp to have a conditions vector that is used to filter the output tuples of this node.
+ * @superclass PhyCondOp
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class JoinOperator extends CondOperator {
+public class PhyJoinBfOp extends PhyCondOp {
 	
-	public Operator rChild;		// The right child of this operator.
+	public PhyOp rChild;		// The right child of this operator.
 	public Tuple left;			// The left tuple now. This need to be an element of class
 								// because it should keep between different calls to getNextTuple().
 	boolean end;				// denote whether this node has already be fully got.
@@ -17,7 +17,7 @@ public class JoinOperator extends CondOperator {
 	/*
 	 * Constructor simply calls super and initialize new elements.
 	 */
-	public JoinOperator() {
+	public PhyJoinBfOp() {
 		super();
 		rChild = null;
 		left = null;

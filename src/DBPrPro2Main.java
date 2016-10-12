@@ -43,15 +43,17 @@ public class DBPrPro2Main {
 			while ((statement = sqlParser.Statement()) != null) {
 				try {
 					// Output the original statement.
-					System.out.println("Read:\t" + statement);
+					LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
+					LogPlan plan = new LogPlan((Select) statement);
+					System.out.println(logPlanPrinter.printLogPlan(plan));
 					// Parse it and show parse result.
 					myParser myPar = new myParser();
-					Operator root = myPar.parseSelect((Select) statement);
-//					root.print();
-//					root.dump(null);
-//					System.out.println();
+					PhyOp root = myPar.parseSelect((Select) statement);
+					root.print();
+					root.dump(null);
+					System.out.println();
 //					root.reset();
-					root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+//					root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
 
 				// Catch every exception so that the program can go on to next statement.
 				} catch (Exception e) {

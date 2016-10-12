@@ -19,11 +19,11 @@ import net.sf.jsqlparser.statement.select.Union;
  */
 public class myParser implements SelectVisitor, FromItemVisitor {
 	
-	Operator root;				// Point to root node of parse result of this select statement.
-	OrderOperator order;		// Point to order node if exist.
-	ProjectionOperator proj;	// Point to projection node. Must exist.
-	CondOperator dataRoot;		// Point to highest join node or the only scan node available.
-	Operator temp;				// Used by parse process.
+	PhyOp root;				// Point to root node of parse result of this select statement.
+	PhySortBfOp order;		// Point to order node if exist.
+	PhyProjBfOp proj;	// Point to projection node. Must exist.
+	PhyCondOp dataRoot;		// Point to highest join node or the only scan node available.
+	PhyOp temp;				// Used by parse process.
 	
 	/*
 	 * API of this class. Build operator tree from a select clause.
@@ -31,7 +31,7 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 	 * 		select clause that is being parsed.
 	 * @return root node of the parse result.
 	 */
-	public Operator parseSelect (Select select) {
+	public PhyOp parseSelect (Select select) {
 		root = temp = null;
 		order = null;
 		proj = null;
@@ -50,16 +50,16 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 		
 		// If there is a dinsinct, parse it.
 		if (plainSelect.getDistinct() != null) {
-			root = temp = new DistinctOperator();
+			root = temp = new PhyDistBfOp();
 		}
 		
 		// If there is an orderby, parse it.
 		if (plainSelect.getOrderByElements() != null) {
 			if (temp != null) {
-				temp.child = order = new OrderOperator();
+				temp.child = order = new PhySortBfOp();
 				temp = temp.child;
 			} else {
-				root = temp = order = new OrderOperator();
+				root = temp = order = new PhySortBfOp();
 			}
 			
 			// Get all the orderby attributes and save them to order operator.
@@ -72,10 +72,10 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 		
 		// Make a projection operator which is mandatory.
 		if (temp != null) {
-			temp.child = proj = new ProjectionOperator();
+			temp.child = proj = new PhyProjBfOp();
 			temp = temp.child;
 		} else {
-			root = temp = proj = new ProjectionOperator();
+			root = temp = proj = new PhyProjBfOp();
 		}
 		
 		// Get all the projection target. If *, set selectAll. If no *, insert all the others to projection operator.
@@ -92,7 +92,7 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 		if (plainSelect.getJoins() == null) {
 			
 			// If there is only one scan.
-			ScanOperator tempScan = new ScanOperator();
+			PhyScanBfOp tempScan = new PhyScanBfOp();
 			tempScan.fileName = plainSelect.getFromItem().toString().split(" ")[0];
 			tempScan.alias = (plainSelect.getFromItem().getAlias() == null ? tempScan.fileName : plainSelect.getFromItem().getAlias());
 			proj.child = dataRoot = tempScan;
@@ -100,15 +100,15 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 			
 			// If there are many talbes to join.
 			// Build the leftmost two scan nodes and join node.
-			JoinOperator joinRoot = new JoinOperator();
-			JoinOperator tempJoin;
-			ScanOperator tempScan = new ScanOperator();
+			PhyJoinBfOp joinRoot = new PhyJoinBfOp();
+			PhyJoinBfOp tempJoin;
+			PhyScanBfOp tempScan = new PhyScanBfOp();
 			tempScan.fileName = plainSelect.getFromItem().toString().split(" ")[0];
 			tempScan.alias = (plainSelect.getFromItem().getAlias() == null ? tempScan.fileName : plainSelect.getFromItem().getAlias());
 			joinRoot.child = tempScan;
 			Iterator joinsIt = plainSelect.getJoins().iterator();
 			Join join = (Join) joinsIt.next();
-			tempScan = new ScanOperator();
+			tempScan = new PhyScanBfOp();
 			tempScan.fileName = join.getRightItem().toString().split(" ")[0];
 			tempScan.alias = (join.getRightItem().getAlias() == null ? tempScan.fileName : join.getRightItem().getAlias());
 			joinRoot.rChild = tempScan;
@@ -116,9 +116,9 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 			// Then build all the others into a left-deep join tree.
 			while (joinsIt.hasNext()) {
 				join = (Join) joinsIt.next();
-				tempJoin = new JoinOperator();
+				tempJoin = new PhyJoinBfOp();
 				tempJoin.child = joinRoot;
-				tempScan = new ScanOperator();
+				tempScan = new PhyScanBfOp();
 				tempScan.fileName = join.getRightItem().toString().split(" ")[0];
 				tempScan.alias = (join.getRightItem().getAlias() == null ? tempScan.fileName : join.getRightItem().getAlias());
 				tempJoin.rChild = tempScan;
@@ -160,14 +160,14 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 	 * 		The condition that is being attached.
 	 * @return whether the condition is successfully attached.
 	 */
-	boolean conditionDis(Operator op, Condition cond) {
+	boolean conditionDis(PhyOp op, Condition cond) {
 		if (op == null)
 			return false;
 		
 		// If successfully attached to a child node, shortcut return.
 		if (conditionDis(op.child, cond))
 			return true;
-		if (op instanceof JoinOperator && conditionDis(((JoinOperator)op).rChild, cond))
+		if (op instanceof PhyJoinBfOp && conditionDis(((PhyJoinBfOp)op).rChild, cond))
 			return true;
 		
 		// If not enough information available in this node, return false.
@@ -177,7 +177,7 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 			return false;
 		
 		// Attach the condition to this node.
-		CondOperator condOp = (CondOperator)op;
+		PhyCondOp condOp = (PhyCondOp)op;
 		condOp.conditions.add(cond);
 		return true;
 	}

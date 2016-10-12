@@ -8,14 +8,14 @@ import java.util.Vector;
  * 
  * @authors Enze Zhou ez242, Weicheng Yu wy248
  */
-public class DistinctOperator extends Operator {
+public class PhyDistBfOp extends PhyOp {
 	
 	public HashSet<Vector<Integer>> appeared;		//hashset to store all tuple data that have been seen
 	
 	/*
 	 * Constructor simply calls super and initialize new element.
 	 */
-    public DistinctOperator() {
+    public PhyDistBfOp() {
     	super();
 		appeared = new HashSet<>();
 	}

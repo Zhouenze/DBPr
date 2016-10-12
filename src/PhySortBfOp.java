@@ -8,7 +8,7 @@ import java.util.Vector;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class OrderOperator extends Operator {
+public class PhySortBfOp extends PhyOp {
 
 	public PriorityQueue<Tuple> heap;   // Buffer to store all child tuples.
 	public Vector<String> orderAttrs;	// Strings that indicates column names that is to be ordered by.
@@ -17,7 +17,7 @@ public class OrderOperator extends Operator {
 	/*
 	 * Constructor that simply calls super() and initiate orderAttrs.
 	 */
-	public OrderOperator() {
+	public PhySortBfOp() {
 		super();
 		heap = null;
 		orderAttrs = new Vector<>();

@@ -6,12 +6,12 @@ import java.io.IOException;
 
 /*
  * Scan Operator
- * Scan a file and output its tuples one by one. Inherited from CondOperator to have a conditions vector that is used to filter the output of this node.
- * @superclass CondOperator
+ * Scan a file and output its tuples one by one. Inherited from PhyCondOp to have a conditions vector that is used to filter the output of this node.
+ * @superclass PhyCondOp
  * 
  * @authors Enze Zhou ez242 Weicheng Yu wy248
  */
-public class ScanOperator extends CondOperator {
+public class PhyScanBfOp extends PhyCondOp {
 	
 	public String fileName;		// File name that is to be scanned. Full path can be obtained by inferring DBCatalog.
 	public String alias;		// Alias of this file. If no alias is provided, it will be the same as the fileName to simplify program.
@@ -69,7 +69,7 @@ public class ScanOperator extends CondOperator {
 		FileReader fileReader;
 		try {
 			fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"/db/data/"+fileName);		//reopen file
-			bufferedReader= new BufferedReader(fileReader);		//also need to set public variables stored in ScanOperator
+			bufferedReader= new BufferedReader(fileReader);		//also need to set public variables stored in PhyScanBfOp
 			file_read = true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

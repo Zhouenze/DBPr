@@ -9,16 +9,16 @@ import java.util.HashMap;
  * 
  * @author Enze Zhou ez242
  */
-public abstract class Operator {
+public abstract class PhyOp {
 	
-	public Operator child;					// Every operator has a child. If need more, add in class.
+	public PhyOp child;					// Every operator has a child. If need more, add in class.
 	
 	public HashMap<String, Integer> schema;	// Schema of the output of this node. A dictionary whose
 											// key is the column name and value is the index of this column.
 	/*
 	 * Constructor that initialize schema instance.
 	 */
-	public Operator() { schema = new HashMap<>(); }
+	public PhyOp() { schema = new HashMap<>(); }
 	
 	/*
 	 * Method that return next tuple in the output of this node.

@@ -6,7 +6,7 @@ import java.util.HashMap;
  * 
  * @author Enze Zhou ez242
  */
-public class Condition {
+public final class Condition {
 	
 	// Enumerate all the 6 different operators:
 	// less than, greater than, less or equal, greater or equal, equal, not equal
@@ -92,5 +92,12 @@ public class Condition {
 		System.out.print(	(leftName == null ? String.valueOf(left) : leftName) + " " + 
 							operator.toString() + " " + 
 							(rightName == null ? String.valueOf(right) : rightName) + " : ");
+	}
+	
+	@Override
+	public String toString() {
+		return 	(leftName == null ? String.valueOf(left) : leftName) + " " + 
+				operator.toString() + " " + 
+				(rightName == null ? String.valueOf(right) : rightName);
 	}
 }

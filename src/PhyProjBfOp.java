@@ -7,7 +7,7 @@ import java.util.Vector;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class ProjectionOperator extends Operator {
+public class PhyProjBfOp extends PhyOp {
 	
 	boolean selectAll;			// Indicated whether this Operator keeps all the columns of its child.
 	Vector<String> projNames;	// Strings that indicates column names that is to be projected.
@@ -15,7 +15,7 @@ public class ProjectionOperator extends Operator {
 	/*
 	 * Constructor that simply calls super() and initiate its additional variables.
 	 */
-	public ProjectionOperator() {
+	public PhyProjBfOp() {
 		super();
 		selectAll = false;
 		projNames = new Vector<>();
