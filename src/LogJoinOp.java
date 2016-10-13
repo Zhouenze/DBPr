@@ -1,7 +1,7 @@
 
 public final class LogJoinOp extends LogOp {
 	
-	LogScanOp rChild;
+	LogScanOp rChild = null;
 
 	@Override
 	public void accept(LogOpVisitor visitor) {

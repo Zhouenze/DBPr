@@ -15,10 +15,10 @@ public final class Condition {
 	}
 	op operator;
 	
-	String leftName;	// Name of the left part of this expression. If null, left part is a instant number indicated by left.
-	String rightName;	// Name of the right part of this expression. If null, right part is a instant number indicated by right.
-	int left;			// Instant left number if leftName is null.
-	int right;			// Instant right number if rightName is null.
+	String leftName = "";	// Name of the left part of this expression. If null, left part is a instant number indicated by left.
+	String rightName = "";	// Name of the right part of this expression. If null, right part is a instant number indicated by right.
+	int left = 0;			// Instant left number if leftName is null.
+	int right = 0;			// Instant right number if rightName is null.
 	
 	/*
 	 * Constructor that build a condition from a string.

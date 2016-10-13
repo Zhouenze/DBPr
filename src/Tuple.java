@@ -9,7 +9,7 @@ import java.util.Vector;
 public class Tuple implements Comparable<Tuple>{
 	
 	public static Vector<Integer> orderAttrsIndex = null; 	// Index of attrs needed to be sorted, in descending priority
-	public Vector<Integer> data;							// Integers in this Tuple.
+	public Vector<Integer> data = null;							// Integers in this Tuple.
 	
 	/*
 	 * Constructor that constructs a tuple with no data

@@ -11,14 +11,10 @@ import java.util.HashMap;
  */
 public abstract class PhyOp {
 	
-	public PhyOp child;					// Every operator has a child. If need more, add in class.
+	public PhyOp child = null;					// Every operator has a child. If need more, add in class.
 	
-	public HashMap<String, Integer> schema;	// Schema of the output of this node. A dictionary whose
+	public HashMap<String, Integer> schema = new HashMap<>();	// Schema of the output of this node. A dictionary whose
 											// key is the column name and value is the index of this column.
-	/*
-	 * Constructor that initialize schema instance.
-	 */
-	public PhyOp() { schema = new HashMap<>(); }
 	
 	/*
 	 * Method that return next tuple in the output of this node.
@@ -36,7 +32,7 @@ public abstract class PhyOp {
 	 * @param out
 	 * 		Stream to be dump to.
 	 */
-	public void dump(OutputStream out) throws IOException {
+	public final void dump(OutputStream out) throws IOException {
 		DataOutputStream dataOut = new DataOutputStream((out == null ? System.out : out));
 		Tuple temp;
 		while ((temp = this.getNextTuple()) != null) {
@@ -49,7 +45,7 @@ public abstract class PhyOp {
 	/*
 	 * Method that print the information of this node.
 	 */
-	public abstract void print();
+	public abstract void accept(PhyOpVisitor visitor);
 	
 	/*
 	 * Method that build output schema of this node.

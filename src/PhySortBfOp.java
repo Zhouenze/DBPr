@@ -8,20 +8,9 @@ import java.util.Vector;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class PhySortBfOp extends PhyOp {
+public class PhySortBfOp extends PhySortOp {
 
-	public PriorityQueue<Tuple> heap;   // Buffer to store all child tuples.
-	public Vector<String> orderAttrs;	// Strings that indicates column names that is to be ordered by.
-										// If not included here, the smaller the index the higher the priority.
-	
-	/*
-	 * Constructor that simply calls super() and initiate orderAttrs.
-	 */
-	public PhySortBfOp() {
-		super();
-		heap = null;
-		orderAttrs = new Vector<>();
-	}
+	public PriorityQueue<Tuple> heap = null;   // Buffer to store all child tuples.
 	
 	/*
 	 * Method that returns next tuple in the output of this node.
@@ -49,26 +38,6 @@ public class PhySortBfOp extends PhyOp {
 	public void reset() {
 		child.reset();
 		heap = null;
-	}
-
-	/*
-	 * Method that prints the information of this node.
-	 * @override from super class Operator
-	 */
-	@Override
-	public void print() {
-		System.out.println("Orde:\t" + orderAttrs.toString() + " : " + schema.toString());
-		child.print();
-	}
-
-	/*
-	 * Method that builds output schema of this node.
-	 * @override from super class Operator
-	 */
-	@Override
-	public void buildSchema() {
-		child.buildSchema();
-		schema = child.schema;
 	}
 	
 	/*

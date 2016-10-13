@@ -13,23 +13,19 @@ import net.sf.jsqlparser.statement.select.Union;
 
 public class LogPlan implements SelectVisitor, FromItemVisitor {
 	
-	private LogSortOp sort;
-	private LogProjOp proj;
-	private LogOp dataRoot;
+	private LogSortOp sort = null;
+	private LogProjOp proj = null;
+	private LogOp dataRoot = null;
 	
-	String query;
-	Vector<Condition> conditions;
-	HashMap<String, String> aliasDict;
-	Vector<String> naiveJoinOrder;
+	String query = "";
+	Vector<Condition> conditions = new Vector<>();
+	HashMap<String, String> aliasDict = new HashMap<>();
+	Vector<String> naiveJoinOrder = new Vector<>();
 	
-	LogOp root;
+	LogOp root = null;
 	
 	public LogPlan(Select select) {
 		query = select.toString();
-		conditions = new Vector<>();
-		aliasDict = new HashMap<>();
-		naiveJoinOrder = new Vector<>();
-		
 		select.getSelectBody().accept(this);
 	}
 

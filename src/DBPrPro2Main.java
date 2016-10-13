@@ -49,7 +49,10 @@ public class DBPrPro2Main {
 					// Parse it and show parse result.
 					myParser myPar = new myParser();
 					PhyOp root = myPar.parseSelect((Select) statement);
-					root.print();
+					PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
+					PhyPlan phyPlan = new PhyPlan(plan, "dfa");
+					phyPlan.root = root;
+					System.out.println(phyPlanPrinter.printPhyPlan(phyPlan));
 					root.dump(null);
 					System.out.println();
 //					root.reset();

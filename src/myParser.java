@@ -19,11 +19,11 @@ import net.sf.jsqlparser.statement.select.Union;
  */
 public class myParser implements SelectVisitor, FromItemVisitor {
 	
-	PhyOp root;				// Point to root node of parse result of this select statement.
-	PhySortBfOp order;		// Point to order node if exist.
-	PhyProjBfOp proj;	// Point to projection node. Must exist.
-	PhyCondOp dataRoot;		// Point to highest join node or the only scan node available.
-	PhyOp temp;				// Used by parse process.
+	PhyOp root = null;				// Point to root node of parse result of this select statement.
+	PhySortBfOp order = null;		// Point to order node if exist.
+	PhyProjBfOp proj = null;	// Point to projection node. Must exist.
+	PhyCondOp dataRoot = null;		// Point to highest join node or the only scan node available.
+	PhyOp temp = null;				// Used by parse process.
 	
 	/*
 	 * API of this class. Build operator tree from a select clause.
@@ -32,10 +32,6 @@ public class myParser implements SelectVisitor, FromItemVisitor {
 	 * @return root node of the parse result.
 	 */
 	public PhyOp parseSelect (Select select) {
-		root = temp = null;
-		order = null;
-		proj = null;
-		dataRoot = null;
 		select.getSelectBody().accept(this);
 		return root;
 	}

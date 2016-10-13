@@ -9,13 +9,6 @@ import java.util.Vector;
  */
 public abstract class PhyCondOp extends PhyOp {
 	
-	public Vector<Condition> conditions;	// Condition list to filter the output of this operator.
+	public Vector<Condition> conditions = new Vector<>();	// Condition list to filter the output of this operator.
 	
-	/*
-	 * Constructor that simply calls super() and initiates condition list.
-	 */
-	public PhyCondOp() {
-		super();
-		conditions = new Vector<>();
-	}
 }

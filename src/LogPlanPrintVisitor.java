@@ -1,7 +1,7 @@
 
 public class LogPlanPrintVisitor implements LogOpVisitor {
 	
-	String result;
+	String result = "";
 	
 	public String printLogPlan(LogPlan logPlan) {
 		result = "Query:\t" + logPlan.query + "\n";

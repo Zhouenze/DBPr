@@ -7,22 +7,11 @@
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class PhyJoinBfOp extends PhyCondOp {
+public class PhyJoinBfOp extends PhyJoinOp {
 	
-	public PhyOp rChild;		// The right child of this operator.
-	public Tuple left;			// The left tuple now. This need to be an element of class
+	public Tuple left = null;			// The left tuple now. This need to be an element of class
 								// because it should keep between different calls to getNextTuple().
-	boolean end;				// denote whether this node has already be fully got.
-	
-	/*
-	 * Constructor simply calls super and initialize new elements.
-	 */
-	public PhyJoinBfOp() {
-		super();
-		rChild = null;
-		left = null;
-		end = false;
-	}
+	boolean end = false;				// denote whether this node has already be fully got.
 
 	/*
 	 * Method that returns next tuple in the output of this node.
@@ -85,41 +74,4 @@ public class PhyJoinBfOp extends PhyCondOp {
 		rChild.reset();
 	}
 
-	/*
-	 * Method that prints the information of this node.
-	 * @override from super class Operator
-	 */
-	@Override
-	public void print() {
-		System.out.println("Join:\t" + schema.toString());
-		child.print();
-		rChild.print();
-		if (!conditions.isEmpty()) {
-			System.out.print("\tJoin conditions: ");
-			for (Condition cond : conditions)
-				cond.print();
-			System.out.println();
-		}
-	}
-
-	/*
-	 * Method that builds output schema of this node.
-	 * @override from super class Operator
-	 */
-	@Override
-	public void buildSchema() {
-		child.buildSchema();
-		rChild.buildSchema();
-		
-		for (String name : child.schema.keySet()) {
-			schema.put(name, child.schema.get(name));
-		}
-		
-		// Because the two children are concatenated together, the index of the right
-		// child columns in output should add the size of the number of columns of the left child.
-		int add = child.schema.size();
-		for (String name : rChild.schema.keySet()) {
-			schema.put(name, rChild.schema.get(name) + add);
-		}
-	}
 }

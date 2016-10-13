@@ -8,17 +8,9 @@ import java.util.Vector;
  * 
  * @authors Enze Zhou ez242, Weicheng Yu wy248
  */
-public class PhyDistBfOp extends PhyOp {
+public class PhyDistBfOp extends PhyDistOp {
 	
-	public HashSet<Vector<Integer>> appeared;		//hashset to store all tuple data that have been seen
-	
-	/*
-	 * Constructor simply calls super and initialize new element.
-	 */
-    public PhyDistBfOp() {
-    	super();
-		appeared = new HashSet<>();
-	}
+	public HashSet<Vector<Integer>> appeared = new HashSet<>();		//hashset to store all tuple data that have been seen
     
 	/*
 	 * Method that return next tuple in the output of this node.
@@ -46,24 +38,5 @@ public class PhyDistBfOp extends PhyOp {
 		appeared.clear();		//need to clear variable appeared in this class
 		child.reset();
 	}
-
-	/*
-	 * Method that print the information of this node.
-	 * @override from super class Operator
-	 */
-	@Override
-	public void print() {
-		System.out.println("Dist:\t" + schema.toString());
-		child.print();
-	}
 	
-	/*
-	 * Method that build output schema of this node.
-	 * @override from super class Operator
-	 */
-	@Override
-	public void buildSchema() {
-		child.buildSchema();
-		schema = child.schema;
-	}
 }
