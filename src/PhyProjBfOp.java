@@ -1,9 +1,7 @@
-import java.util.Vector;
 
 /*
- * Projection Operator
+ * Brute force implementation of projection physical operator
  * Operator that get some of the columns of its child operator.
- * @superclass Operator
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
@@ -23,7 +21,7 @@ public class PhyProjBfOp extends PhyProjOp {
 		// projection
 		// based on childnext's schema and projNames
 		Tuple proj = new Tuple();
-		for(String attr: projNames) {
+		for(String attr: projAttrs) {
 			int index = child.schema.get(attr);
 			proj.data.add((childnext.data.get(index)));
 		}

@@ -1,9 +1,7 @@
 
-public final class LogScanOp extends LogOp {
-
-	@Override
-	public void accept(LogOpVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-}
+/*
+ * Scan logical operator.
+ * 
+ * @author Enze Zhou ez242
+ */
+public final class LogScanOp extends LogOp {}

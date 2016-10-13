@@ -8,6 +8,8 @@ import net.sf.jsqlparser.statement.select.Select;
 /*
  * DBPrPro2Main
  * Entrance of the whole project.
+ * 
+ * @author Enze Zhou ez242
  */
 public class DBPrPro2Main {
 
@@ -42,21 +44,20 @@ public class DBPrPro2Main {
 			int i = 1;
 			while ((statement = sqlParser.Statement()) != null) {
 				try {
-					// Output the original statement.
-					LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
+					// Build logical plan.
 					LogPlan plan = new LogPlan((Select) statement);
+					LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
 					System.out.println(logPlanPrinter.printLogPlan(plan));
-					// Parse it and show parse result.
-					myParser myPar = new myParser();
-					PhyOp root = myPar.parseSelect((Select) statement);
+					
+					// Build physical plan and run it.
+					PhyPlan phyPlan = new PhyPlan(plan);
 					PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
-					PhyPlan phyPlan = new PhyPlan(plan, "dfa");
-					phyPlan.root = root;
 					System.out.println(phyPlanPrinter.printPhyPlan(phyPlan));
-					root.dump(null);
+					
+					phyPlan.root.dump(null);
 					System.out.println();
-//					root.reset();
-//					root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+					phyPlan.root.reset();
+					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
 
 				// Catch every exception so that the program can go on to next statement.
 				} catch (Exception e) {

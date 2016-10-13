@@ -94,6 +94,11 @@ public final class Condition {
 							(rightName == null ? String.valueOf(right) : rightName) + " : ");
 	}
 	
+	/*
+	 * Method that change a condition to it's string representation.
+	 * @return
+	 * 		The string representation of this condition.
+	 */
 	@Override
 	public String toString() {
 		return 	(leftName == null ? String.valueOf(left) : leftName) + " " + 

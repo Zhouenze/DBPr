@@ -11,35 +11,54 @@ import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.select.Union;
 
+/*
+ * Logical Plan class
+ * This class is also a visitor to sql queries, so as to build a logical plan.
+ * 
+ * @author Enze Zhou ez242
+ */
 public class LogPlan implements SelectVisitor, FromItemVisitor {
 	
-	private LogSortOp sort = null;
-	private LogProjOp proj = null;
-	private LogOp dataRoot = null;
+	private LogSortOp sort = null;						// Sort logical operator in this plan.
+	private LogProjOp proj = null;						// Projection logical operator in this plan.
 	
-	String query = "";
-	Vector<Condition> conditions = new Vector<>();
-	HashMap<String, String> aliasDict = new HashMap<>();
-	Vector<String> naiveJoinOrder = new Vector<>();
+	String query = "";									// Original query.
+	Vector<Condition> conditions = new Vector<>();		// All the conditions in this query. Condition distribution will be postponed to physical plan 
+														// building for convenience of future optimization.
+	HashMap<String, String> aliasDict = new HashMap<>();// A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
+	Vector<String> naiveJoinOrder = new Vector<>();		// For a naive plan, the order of scan is the same as input. This field will be deleted after 
+														// optimization project is done because then we will decide the order on our own.
 	
-	LogOp root = null;
+	LogOp root = null;									// Root node of this logical plan.
+	LogOp dataRoot = null;								// Root node of the data part of this plan, maybe a join operator or a scan operator.
 	
+	/*
+	 * Constructor of this class.
+	 * Copy original query and use visitor pattern to build plan.
+	 * @param select
+	 * 		The select query that is being built into a logical plan.
+	 */
 	public LogPlan(Select select) {
 		query = select.toString();
 		select.getSelectBody().accept(this);
 	}
 
+	/*
+	 * Visit a plainselect clause and build logical plan.
+	 * @param plainSelect
+	 * 		Clause that is being built.
+	 */
 	@Override
 	public void visit(PlainSelect plainSelect) {
 		
 		LogOp temp = null;
 		
-		// If there is a distinct, parse it.
+		// If there is a distinct, build it.
 		if (plainSelect.getDistinct() != null) {
 			root = temp = new LogDistOp();
 		}
 		
-		// If there is an order, parse it.
+		// If there is a sort, build it.
 		if (plainSelect.getOrderByElements() != null) {
 			if (temp != null) {
 				temp.child = sort = new LogSortOp();
@@ -48,7 +67,7 @@ public class LogPlan implements SelectVisitor, FromItemVisitor {
 				root = temp = sort = new LogSortOp();
 			}
 			
-			// Get all the order attributes and save them to order operator.
+			// Get all the sort attributes and save them to sort operator.
 			Iterator orderIterator = plainSelect.getOrderByElements().iterator();
 			while (orderIterator.hasNext()) {
 				String str = orderIterator.next().toString();
@@ -133,15 +152,27 @@ public class LogPlan implements SelectVisitor, FromItemVisitor {
 		}
 	}
 
+	/*
+	 * Required by interface but no implementation provided because it's unnecessary.
+	 */
 	@Override
 	public void visit(Union Union) {}
 	
+	/*
+	 * Required by interface but no implementation provided because it's unnecessary.
+	 */
 	@Override
 	public void visit(Table Table) {}
 	
+	/*
+	 * Required by interface but no implementation provided because it's unnecessary.
+	 */
 	@Override
 	public void visit(SubSelect SubSelect) {}
 	
+	/*
+	 * Required by interface but no implementation provided because it's unnecessary.
+	 */
 	@Override
 	public void visit(SubJoin SubJoin) {}
 	

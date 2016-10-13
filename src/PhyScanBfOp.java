@@ -5,16 +5,15 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /*
- * Scan Operator
+ * Brute force implementation of scan physical operator
  * Scan a file and output its tuples one by one. Inherited from PhyCondOp to have a conditions vector that is used to filter the output of this node.
- * @superclass PhyCondOp
  * 
  * @authors Enze Zhou ez242 Weicheng Yu wy248
  */
 public class PhyScanBfOp extends PhyScanOp {
 	
 	public BufferedReader bufferedReader = null;		//keep track of which line in file is being read
-	public boolean file_read = false; 			//flag that checks whether the file specified has been open
+	public boolean file_read = false; 					//flag that checks whether the file specified has been open
 	
 	/*
 	 * Method that return next tuple in the output of this node.

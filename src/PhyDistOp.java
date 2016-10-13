@@ -1,10 +1,10 @@
 
+/*
+ * Base class of distinct physical operator
+ * 
+ * @author Enze Zhou ez242
+ */
 public abstract class PhyDistOp extends PhyOp {
-	
-	@Override
-	public void accept(PhyOpVisitor visitor) {
-		visitor.visit(this);
-	}
 	
 	/*
 	 * Method that build output schema of this node.

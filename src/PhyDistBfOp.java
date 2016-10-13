@@ -2,9 +2,7 @@ import java.util.HashSet;
 import java.util.Vector;
 
 /*
- * Distinct operator
- * Build output by deduplicating output of its child Operator.
- * @superclass Operator
+ * Brute force implementation of distinct physical operator
  * 
  * @authors Enze Zhou ez242, Weicheng Yu wy248
  */

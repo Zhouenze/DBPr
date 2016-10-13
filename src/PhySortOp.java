@@ -1,13 +1,13 @@
 import java.util.Vector;
 
+/*
+ * Base class of sort physical operator
+ * 
+ * @author Enze Zhou ez242
+ */
 public abstract class PhySortOp extends PhyOp {
 
-	public Vector<String> orderAttrs = new Vector<>();
-	
-	@Override
-	public void accept(PhyOpVisitor visitor) {
-		visitor.visit(this);
-	}
+	public Vector<String> sortAttrs = new Vector<>();	// Attributes to be sorted by. If not included in this vector, has priority with descending order.
 	
 	/*
 	 * Method that builds output schema of this node.

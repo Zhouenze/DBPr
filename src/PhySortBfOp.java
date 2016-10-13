@@ -2,9 +2,8 @@ import java.util.PriorityQueue;
 import java.util.Vector;
 
 /*
- * Order Operator
+ * Brute force implementation of sort operator
  * Operator that order its child's output in ascending order.
- * @superclass Operator
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
@@ -50,7 +49,7 @@ public class PhySortBfOp extends PhySortOp {
 		boolean[] inAttrs = new boolean[schema.size()];
 		for (int i = 0; i < inAttrs.length; ++i)
 			inAttrs[i] = false;
-		for(String attr: orderAttrs) {
+		for(String attr: sortAttrs) {
 			Tuple.orderAttrsIndex.add(schema.get(attr));
 			inAttrs[schema.get(attr)] = true;
 		}

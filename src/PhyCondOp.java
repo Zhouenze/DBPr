@@ -1,9 +1,7 @@
 import java.util.Vector;
 
 /*
- * PhyCondOp
- * Operator with a conditions list to filter its output.
- * @superclass Operator
+ * Base class of conditioned operators, which has a condition list to filter its output.
  * 
  * @author Enze Zhou ez242
  */

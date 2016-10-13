@@ -4,17 +4,17 @@ import java.io.OutputStream;
 import java.util.HashMap;
 
 /*
- * Base class for all the operators
+ * Base class for all the physical operators
  * Provide some common methods that all operators should implement.
  * 
  * @author Enze Zhou ez242
  */
 public abstract class PhyOp {
 	
-	public PhyOp child = null;					// Every operator has a child. If need more, add in class.
+	public PhyOp child = null;									// Every operator has a child. If need more, add in class.
 	
 	public HashMap<String, Integer> schema = new HashMap<>();	// Schema of the output of this node. A dictionary whose
-											// key is the column name and value is the index of this column.
+																// key is the column name and value is the index of this column.
 	
 	/*
 	 * Method that return next tuple in the output of this node.
@@ -43,9 +43,13 @@ public abstract class PhyOp {
 	}
 	
 	/*
-	 * Method that print the information of this node.
+	 * Method that is used for visitor pattern.
+	 * @param visitor
+	 * 		The visitor that is visiting this operator.
 	 */
-	public abstract void accept(PhyOpVisitor visitor);
+	public void accept(PhyOpVisitor visitor) {
+		visitor.visit(this);
+	}
 	
 	/*
 	 * Method that build output schema of this node.

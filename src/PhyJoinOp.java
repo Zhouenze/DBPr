@@ -1,12 +1,12 @@
 
+/*
+ * Base class of join physical operator
+ * 
+ * @author Enze Zhou ez242
+ */
 public abstract class PhyJoinOp extends PhyCondOp {
 	
-	PhyScanOp rChild = null;
-
-	@Override
-	public void accept(PhyOpVisitor visitor) {
-		visitor.visit(this);
-	}
+	PhyScanOp rChild = null;		// Right child of this join operator is always a scan operator.
 	
 	/*
 	 * Method that builds output schema of this node.

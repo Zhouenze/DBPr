@@ -1,13 +1,14 @@
 import java.util.Vector;
 
+/*
+ * Projection logical operator
+ * 
+ * @author Enze Zhou ez242
+ */
 public final class LogProjOp extends LogOp {
 	
-	boolean selectAll = false;
-	Vector<String> projAttrs = new Vector<>();
+	boolean selectAll = false;					// Whether this operator select all the attributes.
 	
-	@Override
-	public void accept(LogOpVisitor visitor) {
-		visitor.visit(this);
-	}
+	Vector<String> projAttrs = new Vector<>();	// If doesn't select all, what are the columns to select.
 
 }
