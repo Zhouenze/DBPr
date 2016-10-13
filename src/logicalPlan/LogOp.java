@@ -1,3 +1,4 @@
+package logicalPlan;
 
 /*
  * Base class for all the logical operators
@@ -6,7 +7,7 @@
  */
 public abstract class LogOp {
 	
-	LogOp child = null;		// Child of this operator. Every node have one child except Join operator, which has two.
+	public LogOp child = null;		// Child of this operator. Every node have one child except Join operator, which has two.
 	
 	/*
 	 * Method that is used for visitor pattern.

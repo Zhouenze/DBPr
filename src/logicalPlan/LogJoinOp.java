@@ -1,4 +1,4 @@
-
+package logicalPlan;
 /*
  * Join logical operator
  * 
@@ -6,6 +6,6 @@
  */
 public final class LogJoinOp extends LogOp {
 	
-	LogScanOp rChild = null;	// Right child of Join operator
+	public LogScanOp rChild = null;	// Right child of Join operator
 
 }

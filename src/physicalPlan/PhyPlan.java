@@ -1,3 +1,13 @@
+package physicalPlan;
+import base.Condition;
+import logicalPlan.LogDistOp;
+import logicalPlan.LogJoinOp;
+import logicalPlan.LogOp;
+import logicalPlan.LogOpVisitor;
+import logicalPlan.LogPlan;
+import logicalPlan.LogProjOp;
+import logicalPlan.LogScanOp;
+import logicalPlan.LogSortOp;
 
 /*
  * Physical Plan class
@@ -8,12 +18,13 @@
 public class PhyPlan implements LogOpVisitor {
 
 	String query = "";			// Original query.
-	PhyOp root = null;			// Root node of this physical plan.
 	PhyOp temp = null;			// Used for building process.
 	PhyCondOp dataRoot = null;	// Root node of the data part of this plan, maybe a join operator or a scan operator.
 	LogPlan logPlan = null;		// Logical plan that is being translated.
 	boolean r = false;			// Whether is building the right child of temp. Used for join tree building.
 	
+	public PhyOp root = null;	// Root node of this physical plan.
+
 	/*
 	 * Constructor of this class.
 	 * Copy original query and use visitor pattern to build plan.

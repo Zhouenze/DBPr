@@ -1,4 +1,4 @@
-
+package logicalPlan;
 /*
  * Interface of logical visitor.
  * 

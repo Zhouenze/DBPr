@@ -1,3 +1,5 @@
+package physicalPlan;
+import base.Tuple;
 
 /*
  * Brute force implementation of projection physical operator

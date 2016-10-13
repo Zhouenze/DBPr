@@ -1,3 +1,5 @@
+package physicalPlan;
+import base.DBCatalog;
 
 /*
  * Base class of scan physical operator

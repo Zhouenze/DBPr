@@ -1,5 +1,9 @@
+package logicalPlan;
 import java.util.HashMap;
 import java.util.Vector;
+
+import base.Condition;
+
 import java.util.Iterator;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
@@ -22,15 +26,15 @@ public class LogPlan implements SelectVisitor, FromItemVisitor {
 	private LogSortOp sort = null;						// Sort logical operator in this plan.
 	private LogProjOp proj = null;						// Projection logical operator in this plan.
 	
-	String query = "";									// Original query.
-	Vector<Condition> conditions = new Vector<>();		// All the conditions in this query. Condition distribution will be postponed to physical plan 
-														// building for convenience of future optimization.
-	HashMap<String, String> aliasDict = new HashMap<>();// A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
-	Vector<String> naiveJoinOrder = new Vector<>();		// For a naive plan, the order of scan is the same as input. This field will be deleted after 
-														// optimization project is done because then we will decide the order on our own.
+	public String query = "";									// Original query.
+	public Vector<Condition> conditions = new Vector<>();		// All the conditions in this query. Condition distribution will be postponed to physical plan 
+																// building for convenience of future optimization.
+	public HashMap<String, String> aliasDict = new HashMap<>();	// A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
+	public Vector<String> naiveJoinOrder = new Vector<>();		// For a naive plan, the order of scan is the same as input. This field will be deleted after 
+																// optimization project is done because then we will decide the order on our own.
 	
-	LogOp root = null;									// Root node of this logical plan.
-	LogOp dataRoot = null;								// Root node of the data part of this plan, maybe a join operator or a scan operator.
+	public LogOp root = null;							// Root node of this logical plan.
+	public LogOp dataRoot = null;						// Root node of the data part of this plan, maybe a join operator or a scan operator.
 	
 	/*
 	 * Constructor of this class.

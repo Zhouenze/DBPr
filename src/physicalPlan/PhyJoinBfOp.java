@@ -1,3 +1,6 @@
+package physicalPlan;
+import base.Condition;
+import base.Tuple;
 
 /*
  * Brute force implementation of join operator

@@ -1,3 +1,4 @@
+package logicalPlan;
 import java.util.Vector;
 
 /*
@@ -7,6 +8,6 @@ import java.util.Vector;
  */
 public final class LogSortOp extends LogOp {
 	
-	Vector<String> sortAttrs = new Vector<>();		// The column names that is being sorted.
+	public Vector<String> sortAttrs = new Vector<>();		// The column names that is being sorted.
 	
 }

@@ -1,5 +1,8 @@
+package physicalPlan;
 import java.util.PriorityQueue;
 import java.util.Vector;
+
+import base.Tuple;
 
 /*
  * Brute force implementation of sort operator

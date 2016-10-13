@@ -1,4 +1,4 @@
-
+package logicalPlan;
 /*
  * Scan logical operator.
  * 

@@ -1,7 +1,10 @@
+package physicalPlan;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+
+import base.Tuple;
 
 /*
  * Base class for all the physical operators

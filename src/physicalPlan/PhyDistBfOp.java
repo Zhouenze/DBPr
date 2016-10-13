@@ -1,5 +1,8 @@
+package physicalPlan;
 import java.util.HashSet;
 import java.util.Vector;
+
+import base.Tuple;
 
 /*
  * Brute force implementation of distinct physical operator

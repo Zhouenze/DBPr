@@ -1,4 +1,4 @@
-
+package logicalPlan;
 /*
  * A visitor to print a logical plan.
  * 

@@ -1,3 +1,4 @@
+package base;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -16,9 +17,9 @@ public class DBCatalog {
 	
 	private static DBCatalog catalog = new DBCatalog();		// The only instance of this class.
 	
-	String inputPath = "";									// inputPath from cmd with a / at the end.
+	public String inputPath = "";							// inputPath from cmd with a / at the end.
 	String outputPath = "";									// outputPath from cmd with a / at the end.
-	HashMap<String, Vector<String>> tables = null;			// Schema information of all the tables saved as a dictionary.
+	public HashMap<String, Vector<String>> tables = null;	// Schema information of all the tables saved as a dictionary.
 															// Key is the table name and value is a vector of all the column names of that table.
 	
 	/*

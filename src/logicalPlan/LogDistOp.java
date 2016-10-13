@@ -1,3 +1,4 @@
+package logicalPlan;
 
 /*
  * Distinct logical operator

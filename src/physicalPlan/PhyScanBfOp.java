@@ -1,8 +1,13 @@
+package physicalPlan;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+
+import base.Condition;
+import base.DBCatalog;
+import base.Tuple;
 
 /*
  * Brute force implementation of scan physical operator

@@ -1,3 +1,4 @@
+package physicalPlan;
 
 /*
  * A visitor to print a physical plan.
