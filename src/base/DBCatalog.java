@@ -43,8 +43,9 @@ public class DBCatalog {
 	public void setSchema(String inputPath, String outputPath) throws IOException {
 		
 		// Paths are appended with a / to simplify future usage.
-		this.inputPath = inputPath + "/";
-		this.outputPath = outputPath + "/";
+		"fef".contains("c");
+		this.inputPath = inputPath + (inputPath.contains("/")?"/":"\\");
+		this.outputPath = outputPath + (inputPath.contains("/")?"/":"\\");
 		tables = new HashMap<>();
 		
 		// Read from schema.txt to build schema information.

@@ -1,5 +1,5 @@
 package physicalPlan;
-import java.util.HashSet;
+import java.util.PriorityQueue;
 import java.util.Vector;
 
 import base.Tuple;
@@ -11,33 +11,70 @@ import base.Tuple;
  */
 public class PhyDistBfOp extends PhyDistOp {
 	
-	public HashSet<Vector<Integer>> appeared = new HashSet<>();		//hashset to store all tuple data that have been seen
-    
+	public PriorityQueue<Tuple> heap;   // Buffer to store all child tuples.
+	public boolean hasOrderby = false;
+	private Vector<Integer> lastTupleData;
+	
+	
 	/*
-	 * Method that return next tuple in the output of this node.
+	 * Method that returns next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public Tuple getNextTuple() {
-		Tuple T;
-		while ((T=child.getNextTuple()) != null) {
-			if (!appeared.contains(T.data)){		
-				appeared.add(T.data);		//add data to hashset if not already seen
-				return T;
+		//hasOrderby = false; //disallow check
+		if (hasOrderby) {
+			Tuple T;
+			while ((T=child.getNextTuple()) != null) {
+				if ((lastTupleData == null) || (!lastTupleData.equals(T.data))){		
+					lastTupleData = (Vector<Integer>) T.data.clone();
+					return T;
+				}
 			}
+			return null;
 		}
-		return null;
+		if (heap == null) {
+			// call helper method to construct heap of all child tuples
+			buildHeap();
+		}
+		if (heap.isEmpty()) {
+			return null;
+		}
+		return heap.poll();
 	}
 
 	/*
-	 * Method that reset output of this node to the beginning.
+	 * Method that resets output of this node to the beginning.
 	 * @override from super class Operator
 	 */
 	@Override
 	public void reset() {
-		appeared.clear();		//need to clear variable appeared in this class
 		child.reset();
+		if (hasOrderby)
+			lastTupleData = null;
+		heap = null;
+	}
+
+
+	@Override
+	public void buildSchema() {
+		child.buildSchema();
+		schema = child.schema;
 	}
 	
+	/*
+	 * Method to put all output tuples of child in heap, in order to perform sorting.
+	 */
+	public void buildHeap(){
+		heap = new PriorityQueue<Tuple>();
+		Tuple temp;
+		while((temp = child.getNextTuple()) != null) {
+			heap.offer(temp);
+		}
+		// could be empty!
+	}
 }
+
+

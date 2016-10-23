@@ -53,14 +53,14 @@ public class DBPrPro2Main {
 					// Build logical plan.
 					LogPlan plan = new LogPlan((Select) statement);
 					LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
-					System.out.println(logPlanPrinter.printLogPlan(plan));
-					
+					//System.out.println(logPlanPrinter.printLogPlan(plan));
+					//System.out.println("tables "+DBCatalog.getCatalog().tables.toString());
 					// Build physical plan and run it.
 					PhyPlan phyPlan = new PhyPlan(plan);
 					PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
-					System.out.println(phyPlanPrinter.printPhyPlan(phyPlan));
-					
-					phyPlan.root.dump(null);
+					System.out.println("php plan printer" + phyPlanPrinter.printPhyPlan(phyPlan));
+//					
+					//phyPlan.root.dumpReadable(null);
 					System.out.println();
 					phyPlan.root.reset();
 					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));

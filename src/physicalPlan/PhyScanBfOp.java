@@ -1,15 +1,14 @@
 package physicalPlan;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 
 import base.Condition;
 import base.DBCatalog;
 import base.Tuple;
+import base.TupleReader;
 
-/*
+
+/**
  * Brute force implementation of scan physical operator
  * Scan a file and output its tuples one by one. Inherited from PhyCondOp to have a conditions vector that is used to filter the output of this node.
  * 
@@ -17,34 +16,34 @@ import base.Tuple;
  */
 public class PhyScanBfOp extends PhyScanOp {
 	
-	public BufferedReader bufferedReader = null;		//keep track of which line in file is being read
-	public boolean file_read = false; 					//flag that checks whether the file specified has been open
 	
+	public TupleReader tupleReader;
+	public boolean read = false;
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
+
+	
 	@Override
 	public Tuple getNextTuple() {
-		if (!file_read) {
-			FileReader fileReader;
+		if (!read){
 			try {
-				fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"db/data/"+fileName);
-				bufferedReader= new BufferedReader(fileReader);
-				file_read = true;
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
+				String data = DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/" : "db\\data\\";
+				tupleReader = new TupleReader(DBCatalog.getCatalog().inputPath+data+fileName);
+				read = true;
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
-			
 		}
-		String line;
 		boolean failed = false;
-		try {	
-			while ((line = bufferedReader.readLine()) != null){
-				Tuple retTuple = new Tuple(line);
+		try {
+			Tuple temp = null;
+			while ((temp = tupleReader.getNextTuple()) != null){
 				for (Condition c: conditions){		
-					if (!c.test(retTuple, schema)) {		//if any test fails, set failed and check next ccondition
+					if (!c.test(temp, schema)) {		//if any test fails, set failed and check next ccondition
 						failed = true;
 						break;
 					}
@@ -53,9 +52,11 @@ public class PhyScanBfOp extends PhyScanOp {
 					failed = false;
 					continue;
 				}
-				return retTuple;
+				
+				return temp;
 			}
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -66,15 +67,16 @@ public class PhyScanBfOp extends PhyScanOp {
 	 * @override from super class Operator
 	 */
 	@Override
-	public void reset() {
-		FileReader fileReader;
+	public void reset()  {
 		try {
-			fileReader = new FileReader(DBCatalog.getCatalog().inputPath+"/db/data/"+fileName);		//reopen file
-			bufferedReader= new BufferedReader(fileReader);		//also need to set public variables stored in PhyScanBfOp
-			file_read = true;
-		} catch (FileNotFoundException e) {
+			if (tupleReader != null)
+				tupleReader.reset();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
 
 }
+

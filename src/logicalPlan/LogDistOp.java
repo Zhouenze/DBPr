@@ -5,4 +5,6 @@ package logicalPlan;
  * 
  * @author Enze Zhou ez242
  */
-public final class LogDistOp extends LogOp {}
+public final class LogDistOp extends LogOp {
+	public boolean hasOrderby;		//added boolean for sorting, this can make already sorted input run faster
+}

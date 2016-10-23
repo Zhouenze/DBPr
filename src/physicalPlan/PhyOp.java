@@ -1,5 +1,6 @@
 package physicalPlan;
 import java.io.DataOutputStream;
+import base.TupleWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ public abstract class PhyOp {
 	 * @param out
 	 * 		Stream to be dump to.
 	 */
-	public final void dump(OutputStream out) throws IOException {
+	public final void dumpReadable(OutputStream out) throws IOException {
 		DataOutputStream dataOut = new DataOutputStream((out == null ? System.out : out));
 		Tuple temp;
 		while ((temp = this.getNextTuple()) != null) {
@@ -44,6 +45,17 @@ public abstract class PhyOp {
 			dataOut.write('\n');
 		}
 	}
+	
+	public void dump(OutputStream out) throws IOException {
+		TupleWriter TW = new TupleWriter(out);
+		Tuple temp;
+		while ((temp = this.getNextTuple()) != null) {
+			TW.setNextTuple(temp);
+		}
+		if (!TW.bufferEmpty())
+			TW.fillFlush();
+	}
+	
 	
 	/*
 	 * Method that is used for visitor pattern.

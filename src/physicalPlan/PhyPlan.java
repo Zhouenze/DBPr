@@ -23,6 +23,7 @@ public class PhyPlan implements LogOpVisitor {
 	LogPlan logPlan = null;		// Logical plan that is being translated.
 	boolean r = false;			// Whether is building the right child of temp. Used for join tree building.
 	
+	
 	public PhyOp root = null;	// Root node of this physical plan.
 
 	/*
@@ -147,9 +148,11 @@ public class PhyPlan implements LogOpVisitor {
 		sortOp.sortAttrs = logSortOp.sortAttrs;
 		if (temp == null) {
 			root = temp = sortOp;
+			
 		} else {
 			temp.child = sortOp;
 			temp = sortOp;
+			((PhyDistBfOp) root).hasOrderby = true;
 		}
 		logSortOp.child.accept(this);
 	}

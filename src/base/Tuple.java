@@ -1,6 +1,8 @@
 package base;
 import java.util.Vector;
 
+import javax.naming.spi.DirStateFactory.Result;
+
 /*
  * Tuple
  * Class that represents a tuple.
@@ -47,7 +49,14 @@ public class Tuple implements Comparable<Tuple>{
 	 *       Tuple with which we are comparing this tuple
 	 */
 	@Override
-	public int compareTo(Tuple tp) {		
+	public int compareTo(Tuple tp) {	
+		if (orderAttrsIndex==null) {
+			for (int j = 0; j < data.size(); ++j) {
+				int ret = data.get(j).compareTo(tp.data.get(j));
+				if (ret != 0) return ret;
+			}
+			return 0;
+		}
 		for(int index: orderAttrsIndex) {
 			int result = this.data.get(index).compareTo(tp.data.get(index));
 			if(result != 0) {
@@ -55,5 +64,6 @@ public class Tuple implements Comparable<Tuple>{
 			}
 		}
 		return 0;
+		
 	}
 }
