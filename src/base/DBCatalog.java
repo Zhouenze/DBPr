@@ -19,6 +19,7 @@ public class DBCatalog {
 	
 	public String inputPath = "";							// inputPath from cmd with a / at the end.
 	String outputPath = "";									// outputPath from cmd with a / at the end.
+	public String tempPath = "";
 	public HashMap<String, Vector<String>> tables = null;	// Schema information of all the tables saved as a dictionary.
 															// Key is the table name and value is a vector of all the column names of that table.
 	
@@ -40,12 +41,13 @@ public class DBCatalog {
 	 * @param outputPath
 	 * 		output path from cmd line.
 	 */
-	public void setSchema(String inputPath, String outputPath) throws IOException {
+	public void setSchema(String inputPath, String outputPath, String tempPath) throws IOException {
 		
 		// Paths are appended with a / to simplify future usage.
 		"fef".contains("c");
 		this.inputPath = inputPath + (inputPath.contains("/")?"/":"\\");
 		this.outputPath = outputPath + (inputPath.contains("/")?"/":"\\");
+		this.tempPath = tempPath + (tempPath.contains("/")?"/":"\\");
 		tables = new HashMap<>();
 		
 		// Read from schema.txt to build schema information.

@@ -144,7 +144,8 @@ public class PhyPlan implements LogOpVisitor {
 	 */
 	@Override
 	public void visit(LogSortOp logSortOp) {
-		PhySortOp sortOp = new PhySortBfOp();
+//		System.out.println("Constructing the External Sort!");
+		PhySortOp sortOp = new PhySortExOp(4);
 		sortOp.sortAttrs = logSortOp.sortAttrs;
 		if (temp == null) {
 			root = temp = sortOp;

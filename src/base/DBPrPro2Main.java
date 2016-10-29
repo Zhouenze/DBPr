@@ -30,7 +30,7 @@ public class DBPrPro2Main {
 		
 		// Build DBCatalog first.
 		try {
-			DBCatalog.getCatalog().setSchema(args[0], args[1]);
+			DBCatalog.getCatalog().setSchema(args[0], args[1], args[2]);
 		} 
 		catch (IOException e) {
 			System.err.println("IOException occurred when building catalog: " + e.toString());
