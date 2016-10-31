@@ -139,6 +139,7 @@ public class PhySortExOp extends PhySortOp {
 			if(!TW.bufferEmpty()) {       // TW would never know the end of writing
 				TW.fillFlush();           
 			}
+			TW.close();
 			// internal must be empty until this point
 		}while (buildMore);
 		
@@ -206,6 +207,10 @@ public class PhySortExOp extends PhySortOp {
 				}
 				if(!TW.bufferEmpty()) {
 					TW.fillFlush();           
+				}
+				TW.close();
+				for(int k = 0; k < numReader; k++) {
+					mergeReader[k].close();
 				}
 			}
 			
