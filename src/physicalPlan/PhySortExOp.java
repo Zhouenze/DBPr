@@ -91,7 +91,6 @@ public class PhySortExOp extends PhySortOp {
 	
 	@Override
 	public void reset() { // ? will it ever be reset before sorting?
-		// TODO if reset is called before sorting is performed, just do nothing?
 		if(TR == null) {
 			return;
 		}
@@ -108,10 +107,11 @@ public class PhySortExOp extends PhySortOp {
 	 * Method to perform external sort and write out the Full Sorted File
 	 */
 	public void externalSort() throws IOException{
-		// Pass 0: internal sort
+		/*
+		 *  Pass 0: internal sort
+		 */
 		// Read in from child；Write out runs of B pages;
 		
-		// TODO # of Attrs of the table 
 		int numPerRun = B * 4096 / (schema.size() * 4); // # of tuples per run given in Pass0
 		boolean buildMore;
 		int numRuns = 0;
@@ -129,20 +129,22 @@ public class PhySortExOp extends PhySortOp {
 			if(!buildMore && numRuns == 1) {
 				TW = new TupleWriter(new FileOutputStream(tempsubdir + "sortResult"));
 			} else {
-				TW = new TupleWriter(new FileOutputStream(tempsubdir + "0" + numRuns));
+				TW = new TupleWriter(new FileOutputStream(tempsubdir + "0_" + numRuns));
 			}
 			while(!internal.isEmpty()) {
 //				System.out.println(internal.peek().data);
 				TW.setNextTuple(internal.poll()); // ? write
 			}
 			// leftover, fill with zero and write out
-			if(!TW.bufferEmpty()) {       // ? a TupleWriter a page? will it write out >1 page file?
+			if(!TW.bufferEmpty()) {       // TW would never know the end of writing
 				TW.fillFlush();           
 			}
 			// internal must be empty until this point
 		}while (buildMore);
 		
-		// Pass 1 and any following
+		/*
+		 *  Pass 1 and any following
+		 */
 		if(numRuns > 1) { // if numRuns generated in Pass 0 is 1 already, file sorted already, no need to merge
 			this.merge(numRuns, myComp);
 		}
@@ -173,7 +175,7 @@ public class PhySortExOp extends PhySortOp {
 						marker = j;
 						break;
 					}
-					mergeReader[j] = new TupleReader(tempsubdir + String.valueOf(pass-1) + runIndex);
+					mergeReader[j] = new TupleReader(tempsubdir + String.valueOf(pass-1) + "_" + runIndex);
 				}
 				
 //				System.out.println("Pass" + pass + "," + i + "th Run");
@@ -191,7 +193,7 @@ public class PhySortExOp extends PhySortOp {
 				if(numRunsToBuild == 1) {
 					TW = new TupleWriter(new FileOutputStream(tempsubdir + "sortResult"));
 				} else {
-					TW = new TupleWriter(new FileOutputStream(tempsubdir + pass + String.valueOf(i + 1)));
+					TW = new TupleWriter(new FileOutputStream(tempsubdir + pass + "_" + String.valueOf(i + 1)));
 				}
 				while(!tempMerg.isEmpty()) {
 					Tuple temp = tempMerg.poll();
@@ -201,6 +203,9 @@ public class PhySortExOp extends PhySortOp {
 						tempMerg.offer(next);
 						findReader.put(next, findReader.get(temp));
 					}
+				}
+				if(!TW.bufferEmpty()) {
+					TW.fillFlush();           
 				}
 			}
 			
