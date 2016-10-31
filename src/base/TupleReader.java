@@ -48,9 +48,12 @@ public class TupleReader {
 	 * Method that is used to grab a record
 	 */
 	public Tuple getNextTuple() throws IOException{
-//		System.out.println(tupleSize);
-//		System.out.println(tupleCounts);
-//		System.out.println(tupleCurrentCounts);
+
+		//if a page has no tuple, return null directly 
+		//previously calling getNextTuple() will return a tuple object with no data set. Now it returns null
+		if (tupleCounts == 0) return null;
+
+
 		Tuple ret = new Tuple();
 		if (tupleCurrentCounts < tupleCounts) {
 			for (int i = 0; i < tupleSize; ++i) {
