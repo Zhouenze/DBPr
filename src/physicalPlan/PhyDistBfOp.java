@@ -12,7 +12,6 @@ import base.Tuple;
 public class PhyDistBfOp extends PhyDistOp {
 	
 	public PriorityQueue<Tuple> heap;   // Buffer to store all child tuples.
-	public boolean hasOrderby = false;
 	private Vector<Integer> lastTupleData;
 	
 	

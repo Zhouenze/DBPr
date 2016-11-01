@@ -65,6 +65,7 @@ public class LogPlan implements SelectVisitor, FromItemVisitor {
 		// If there is a sort, build it.
 		if (plainSelect.getOrderByElements() != null) {
 			if (temp != null) {
+				((LogDistOp)temp).hasOrderby = true;
 				temp.child = sort = new LogSortOp();
 				temp = temp.child;
 			} else {

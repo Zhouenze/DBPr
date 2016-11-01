@@ -28,7 +28,7 @@ public class TupleWriter {
 		FC = new FileOutputStream(filename).getChannel();
 		BB = ByteBuffer.allocate(4096);
 		setTupleInfo();
-
+		BB.putInt(4, 0);
 	}
 	
 	public TupleWriter(OutputStream out) throws IOException {
@@ -36,6 +36,7 @@ public class TupleWriter {
 		FC = ((FileOutputStream)out).getChannel();
 		BB = ByteBuffer.allocate(4096);
 		setTupleInfo();
+		BB.putInt(4, 0);
 	}
 	
 	/*

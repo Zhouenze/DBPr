@@ -7,6 +7,8 @@ package physicalPlan;
  */
 public abstract class PhyDistOp extends PhyOp {
 	
+	public boolean hasOrderby = false;
+	
 	/*
 	 * Method that build output schema of this node.
 	 * @override from super class Operator

@@ -52,7 +52,7 @@ public class DBPrPro2Main {
 				try {
 					// Build logical plan.
 					LogPlan plan = new LogPlan((Select) statement);
-					LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
+					//LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
 					//System.out.println(logPlanPrinter.printLogPlan(plan));
 					//System.out.println("tables "+DBCatalog.getCatalog().tables.toString());
 					// Build physical plan and run it.

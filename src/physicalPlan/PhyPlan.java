@@ -1,5 +1,10 @@
 package physicalPlan;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.Vector;
+
 import base.Condition;
+import base.DBCatalog;
 import logicalPlan.LogDistOp;
 import logicalPlan.LogJoinOp;
 import logicalPlan.LogOp;
@@ -25,17 +30,40 @@ public class PhyPlan implements LogOpVisitor {
 	
 	
 	public PhyOp root = null;	// Root node of this physical plan.
-
+	
+	int joinType, joinBuffer, sortType, sortBuffer;
+	
 	/*
-	 * Constructor of this class.
-	 * Copy original query and use visitor pattern to build plan.
+	 * Another constructor of this class, ready for future usage.
 	 * @param logPlan
 	 * 		Logical plan that is being translated into a physical plan.
+	 * @param config
+	 * 		Configuration string that controls physical plan building.
 	 */
 	public PhyPlan(LogPlan logPlan) {
-		// Copy some basic information
 		query = logPlan.query;
 		this.logPlan = logPlan;
+		
+		try {
+			BufferedReader configReader = new BufferedReader(new FileReader(DBCatalog.getCatalog().inputPath + "plan_builder_config.txt"));
+	
+			String configLine = configReader.readLine();
+			String [] columns = configLine.trim().split(" ");
+			joinType = Integer.valueOf(columns[0]);
+			if (joinType == 1)
+				joinBuffer = Integer.valueOf(columns[1]);
+			configLine = configReader.readLine();
+			columns = configLine.trim().split(" ");
+			sortType = Integer.valueOf(columns[0]);
+			if (sortType == 1)
+				sortBuffer = Integer.valueOf(columns[1]);
+	
+			configReader.close();
+		} catch (Exception e) {
+			System.err.println("Exception occurred when reading config file.");
+			System.err.println(e.toString());
+			e.printStackTrace();
+		}
 		
 		// Use visitor pattern to build physical plan.
 		logPlan.root.accept(this);
@@ -51,18 +79,9 @@ public class PhyPlan implements LogOpVisitor {
 				if (!conditionDis(dataRoot, cond))
 					System.err.println("Condition undispensed!");
 		}
-	}
-	
-	/*
-	 * Another constructor of this class, ready for future usage.
-	 * @param logPlan
-	 * 		Logical plan that is being translated into a physical plan.
-	 * @param config
-	 * 		Configuration string that controls physical plan building.
-	 */
-	public PhyPlan(LogPlan logPlan, String config) {
-		query = logPlan.query;
-		this.logPlan = logPlan;
+		
+		if (joinType == 2 && dataRoot instanceof PhyJoinSMJOp)
+			getSMJSortAttrs(dataRoot);
 	}
 
 	/*
@@ -74,6 +93,7 @@ public class PhyPlan implements LogOpVisitor {
 	@Override
 	public void visit(LogDistOp logDistOp) {
 		root = temp = new PhyDistBfOp();
+		((PhyDistBfOp)temp).hasOrderby = logDistOp.hasOrderby;
 		logDistOp.child.accept(this);
 	}
 
@@ -85,15 +105,41 @@ public class PhyPlan implements LogOpVisitor {
 	 */
 	@Override
 	public void visit(LogJoinOp logJoinOp) {
-		PhyJoinOp joinOp = new PhyJoinBfOp();
-		if (logPlan.dataRoot == logJoinOp)
-			dataRoot = joinOp;
-		temp.child = joinOp;
-		temp = joinOp;
-		r = true;
-		logJoinOp.rChild.accept(this);
-		r = false;
-		logJoinOp.child.accept(this);
+		PhyJoinOp joinOp = null;
+		switch (joinType) {
+		case 0:
+		default:
+			joinOp = new PhyJoinBfOp();
+			if (logPlan.dataRoot == logJoinOp)
+				dataRoot = joinOp;
+			
+			temp.child = joinOp;
+			temp = joinOp;
+			r = true;
+			logJoinOp.rChild.accept(this);
+			r = false;
+			logJoinOp.child.accept(this);
+			break;
+		case 1:
+			break;
+		case 2:
+			joinOp = new PhyJoinSMJOp();
+			if (logPlan.dataRoot == logJoinOp)
+				dataRoot = joinOp;
+			
+			temp.child = joinOp;
+			
+			joinOp.child = new PhySortExOp(sortBuffer);
+			joinOp.rChild = new PhySortExOp(sortBuffer);
+			
+			r = false;
+			temp = joinOp.rChild;
+			logJoinOp.rChild.accept(this);
+			temp = joinOp.child;
+			logJoinOp.child.accept(this);
+			
+			break;
+		}
 	}
 
 	/*
@@ -144,8 +190,17 @@ public class PhyPlan implements LogOpVisitor {
 	 */
 	@Override
 	public void visit(LogSortOp logSortOp) {
-//		System.out.println("Constructing the External Sort!");
-		PhySortOp sortOp = new PhySortExOp(4);
+		PhySortOp sortOp = null;
+		switch (sortType) {
+		case 0:
+		default:
+			sortOp = new PhySortBfOp();
+			break;
+		case 1:
+			sortOp = new PhySortExOp(sortBuffer);
+			break;
+		}
+		
 		sortOp.sortAttrs = logSortOp.sortAttrs;
 		if (temp == null) {
 			root = temp = sortOp;
@@ -153,7 +208,6 @@ public class PhyPlan implements LogOpVisitor {
 		} else {
 			temp.child = sortOp;
 			temp = sortOp;
-			((PhyDistBfOp) root).hasOrderby = true;
 		}
 		logSortOp.child.accept(this);
 	}
@@ -193,7 +247,7 @@ public class PhyPlan implements LogOpVisitor {
 		// If successfully attached to a child node, shortcut return.
 		if (conditionDis(op.child, cond))
 			return true;
-		if (op instanceof PhyJoinBfOp && conditionDis(((PhyJoinBfOp)op).rChild, cond))
+		if (op instanceof PhyJoinOp && conditionDis(((PhyJoinOp)op).rChild, cond))
 			return true;
 		
 		// If not enough information available in this node, return false.
@@ -203,8 +257,27 @@ public class PhyPlan implements LogOpVisitor {
 			return false;
 		
 		// Attach the condition to this node.
+		if (op instanceof PhyJoinOp && op.child.schema.keySet().contains(cond.rightName))
+			cond.flip();
 		PhyCondOp condOp = (PhyCondOp)op;
 		condOp.conditions.add(cond);
 		return true;
+	}
+	
+	void getSMJSortAttrs(PhyOp op) {
+		if (op == null)
+			return;
+		if (op instanceof PhyJoinSMJOp) {
+			PhyJoinSMJOp smjOp = (PhyJoinSMJOp)op;
+			PhySortOp smjL = (PhySortOp)smjOp.child;
+			PhySortOp smjR = (PhySortOp)smjOp.rChild;
+			for (Condition cond : smjOp.conditions) {
+				if (!smjL.sortAttrs.contains(cond.leftName))
+					smjL.sortAttrs.add(cond.leftName);
+				if (!smjR.sortAttrs.contains(cond.rightName))
+					smjR.sortAttrs.add(cond.rightName);
+			}
+		}
+		getSMJSortAttrs(op.child);
 	}
 }
