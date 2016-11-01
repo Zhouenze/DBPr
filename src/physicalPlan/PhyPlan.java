@@ -31,7 +31,7 @@ public class PhyPlan implements LogOpVisitor {
 	
 	public PhyOp root = null;	// Root node of this physical plan.
 	
-	int joinType, joinBuffer, sortType, sortBuffer;
+	int joinType, joinBuffer, sortType, sortBuffer;		// The configuration of this plan.
 	
 	/*
 	 * Another constructor of this class, ready for future usage.
@@ -45,6 +45,8 @@ public class PhyPlan implements LogOpVisitor {
 		this.logPlan = logPlan;
 		
 		try {
+			
+			// Set configuration according to config file.
 			BufferedReader configReader = new BufferedReader(new FileReader(DBCatalog.getCatalog().inputPath + "plan_builder_config.txt"));
 	
 			String configLine = configReader.readLine();
@@ -80,6 +82,7 @@ public class PhyPlan implements LogOpVisitor {
 					System.err.println("Condition undispensed!");
 		}
 		
+		// The attributes to be sorted by under a sort-merge-join operator is set here.
 		if (joinType == 2 && dataRoot instanceof PhyJoinSMJOp)
 			getSMJSortAttrs(dataRoot);
 	}
@@ -107,7 +110,7 @@ public class PhyPlan implements LogOpVisitor {
 	public void visit(LogJoinOp logJoinOp) {
 		PhyJoinOp joinOp = null;
 		switch (joinType) {
-		case 0:
+		case 0:										// Brute force join.
 		default:
 			joinOp = new PhyJoinBfOp();
 			if (logPlan.dataRoot == logJoinOp)
@@ -120,7 +123,7 @@ public class PhyPlan implements LogOpVisitor {
 			r = false;
 			logJoinOp.child.accept(this);
 			break;
-		case 1:
+		case 1:										// Block nested loop join.
 			joinOp = new PhyJoinBNLJOp(joinBuffer);
 			if (logPlan.dataRoot == logJoinOp)
 				dataRoot = joinOp;
@@ -132,7 +135,7 @@ public class PhyPlan implements LogOpVisitor {
 			r = false;
 			logJoinOp.child.accept(this);
 			break;
-		case 2:
+		case 2:										// Sort-merge join.
 			joinOp = new PhyJoinSMJOp();
 			if (logPlan.dataRoot == logJoinOp)
 				dataRoot = joinOp;
@@ -200,8 +203,10 @@ public class PhyPlan implements LogOpVisitor {
 			temp.child = scanOp;
 		}
 		
+		// Additional initialization for BNLJ
 		if (temp instanceof PhyJoinBNLJOp) {
-			((PhyJoinBNLJOp)temp).setLeftFile(DBCatalog.getCatalog().tables.get(scanOp.fileName).size(), DBCatalog.getCatalog().inputPath + scanOp.fileName);
+			((PhyJoinBNLJOp)temp).setLeftFile(	DBCatalog.getCatalog().tables.get(scanOp.fileName).size(), 
+												DBCatalog.getCatalog().inputPath + "db/data/" + scanOp.fileName);
 		}
 	}
 
@@ -212,14 +217,14 @@ public class PhyPlan implements LogOpVisitor {
 	 * 		Sort logical operator to be translated.
 	 */
 	@Override
-	public void visit(LogSortOp logSortOp) {
+	public void visit(LogSortOp logSortOp) {		// This function is only called for the top sort operator because there is only one logical sort, others are added by sort-merge-join.
 		PhySortOp sortOp = null;
 		switch (sortType) {
-		case 0:
+		case 0:							// Brute force
 		default:
 			sortOp = new PhySortBfOp();
 			break;
-		case 1:
+		case 1:							// External sort
 			sortOp = new PhySortExOp(sortBuffer);
 			break;
 		}
@@ -280,6 +285,7 @@ public class PhyPlan implements LogOpVisitor {
 			return false;
 		
 		// Attach the condition to this node.
+		// Modify condition to make sure that the first element corresponding to child and second to rChild. This assumption is necessary for smj. 
 		if (op instanceof PhyJoinOp && op.child.schema.keySet().contains(cond.rightName))
 			cond.flip();
 		PhyCondOp condOp = (PhyCondOp)op;
@@ -287,6 +293,11 @@ public class PhyPlan implements LogOpVisitor {
 		return true;
 	}
 	
+	/*
+	 * This function sets the sort attributes of sort-merge-join operator children.
+	 * @param
+	 * 		op the operator that is trying to distribute sort attributes.
+	 */
 	void getSMJSortAttrs(PhyOp op) {
 		if (op == null)
 			return;
@@ -295,7 +306,7 @@ public class PhyPlan implements LogOpVisitor {
 			PhySortOp smjL = (PhySortOp)smjOp.child;
 			PhySortOp smjR = (PhySortOp)smjOp.rChild;
 			for (Condition cond : smjOp.conditions) {
-				if (!smjL.sortAttrs.contains(cond.leftName))
+				if (!smjL.sortAttrs.contains(cond.leftName))		// No duplication allowed.
 					smjL.sortAttrs.add(cond.leftName);
 				if (!smjR.sortAttrs.contains(cond.rightName))
 					smjR.sortAttrs.add(cond.rightName);

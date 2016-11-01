@@ -68,6 +68,14 @@ public class PhySortBfOp extends PhySortOp {
 	 * Customized Comparator to compare tuples based on the sortAttrsIndex
 	 */
 	private class exComparator implements Comparator<Tuple> {
+		
+		/*
+		 * This function compares two tuples by default priority, because distinct only need an order, with no perticular order.
+		 * @param
+		 * 		t1 and t2 are two tuples being compared.
+		 * @return
+		 * 		an integer value determining the result of comparison.
+		 */
 		public int compare(Tuple t1, Tuple t2) {
 			if (sortAttrsIndex==null) {
 				for (int j = 0; j < t1.data.size(); ++j) {
@@ -84,7 +92,6 @@ public class PhySortBfOp extends PhySortOp {
 			}
 			return 0;
 		}
-		
 	}
 	
 	/*

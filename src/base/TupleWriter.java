@@ -5,13 +5,11 @@ package base;
  * 
  * @author Weicheng Yu wy248
  */
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Vector;
 
 public class TupleWriter {
 	//private String fileName;
@@ -28,7 +26,7 @@ public class TupleWriter {
 		FC = new FileOutputStream(filename).getChannel();
 		BB = ByteBuffer.allocate(4096);
 		setTupleInfo();
-		BB.putInt(4, 0);
+		BB.putInt(4, 0);				// An empty file.
 	}
 	
 	public TupleWriter(OutputStream out) throws IOException {
@@ -36,7 +34,7 @@ public class TupleWriter {
 		FC = ((FileOutputStream)out).getChannel();
 		BB = ByteBuffer.allocate(4096);
 		setTupleInfo();
-		BB.putInt(4, 0);
+		BB.putInt(4, 0);				// An empty file.
 	}
 	
 	/*

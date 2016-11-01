@@ -60,17 +60,12 @@ public class DBPrPro2Main {
 					PhyPlan phyPlan = new PhyPlan(plan);
 					PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
 					System.out.println("php plan printer" + phyPlanPrinter.printPhyPlan(phyPlan));
-//					
+
 					//phyPlan.root.dumpReadable(null);
 					System.out.println();
+					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i));
 					phyPlan.root.reset();
-//					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
-//					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
-//					((PhyJoinSMJOp)phyPlan.root.child.child).rChild.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "inner"));
-//					((PhyJoinSMJOp)phyPlan.root.child.child).child.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "outer"));
-					System.out.println(((PhyJoinSMJOp)phyPlan.root.child.child).rChild.schema);
-//					Tuple tp = ((PhyJoinSMJOp)phyPlan.root.child.child).rChild.getNextTuple();
-//					tp.print();
+					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++ + "Readable"));
 
 				// Catch every exception so that the program can go on to next statement.
 				} catch (Exception e) {

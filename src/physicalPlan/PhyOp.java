@@ -46,6 +46,11 @@ public abstract class PhyOp {
 		}
 	}
 	
+	/*
+	 * Method that dump all the output of this node to a stream in binary form.
+	 * @param out
+	 * 		The stream to be dump to.
+	 */
 	public void dump(OutputStream out) throws IOException {
 		TupleWriter TW = new TupleWriter(out);
 		Tuple temp;
