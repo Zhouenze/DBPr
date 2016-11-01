@@ -106,4 +106,26 @@ public final class Condition {
 				operator.toString() + " " + 
 				(rightName == null ? String.valueOf(right) : rightName);
 	}
+	
+	public void flip() {
+		String temp = leftName;
+		leftName = rightName;
+		rightName = temp;
+		switch (operator) {
+		case l:
+			operator = op.g;
+			break;
+		case g:
+			operator = op.l;
+			break;
+		case le:
+			operator = op.ge;
+			break;
+		case ge:
+			operator = op.le;
+			break;
+		default:
+			break;
+		}
+	}
 }

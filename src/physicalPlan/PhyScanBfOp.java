@@ -17,15 +17,15 @@ import base.TupleReader;
 public class PhyScanBfOp extends PhyScanOp {
 	
 	
-	public TupleReader tupleReader;
+	public TupleReader tupleReader;		// Reader for binary file.
 	public boolean read = false;
+	
+	
 	/*
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
-
-	
 	@Override
 	public Tuple getNextTuple() {
 		if (!read){
@@ -34,7 +34,6 @@ public class PhyScanBfOp extends PhyScanOp {
 				tupleReader = new TupleReader(DBCatalog.getCatalog().inputPath+data+fileName);
 				read = true;
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
@@ -56,7 +55,6 @@ public class PhyScanBfOp extends PhyScanOp {
 				return temp;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -72,7 +70,6 @@ public class PhyScanBfOp extends PhyScanOp {
 			if (tupleReader != null)
 				tupleReader.reset();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

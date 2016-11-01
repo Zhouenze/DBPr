@@ -7,7 +7,7 @@ package physicalPlan;
  */
 public abstract class PhyJoinOp extends PhyCondOp {
 	
-	PhyScanOp rChild = null;		// Right child of this join operator is always a scan operator.
+	public PhyOp rChild = null;		// Right child of this join operator is always a scan operator.
 	
 	/*
 	 * Method that builds output schema of this node.

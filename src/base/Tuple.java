@@ -1,7 +1,7 @@
 package base;
+
 import java.util.Vector;
 
-import javax.naming.spi.DirStateFactory.Result;
 
 /*
  * Tuple
@@ -9,9 +9,8 @@ import javax.naming.spi.DirStateFactory.Result;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class Tuple implements Comparable<Tuple>{
+public class Tuple {
 	
-	public static Vector<Integer> orderAttrsIndex = null; 		// Index of attrs needed to be sorted, in descending priority
 	public Vector<Integer> data = null;							// Integers in this Tuple.
 	
 	/*
@@ -40,30 +39,5 @@ public class Tuple implements Comparable<Tuple>{
 		for (Integer inti : data)
 			System.out.print(inti + " ");
 		System.out.println();
-	}
-	
-	/*
-	 * Method that defines how tuples are sorted
-	 * according to attributes, their indices and priorities.
-	 * @param tp
-	 *       Tuple with which we are comparing this tuple
-	 */
-	@Override
-	public int compareTo(Tuple tp) {	
-		if (orderAttrsIndex==null) {
-			for (int j = 0; j < data.size(); ++j) {
-				int ret = data.get(j).compareTo(tp.data.get(j));
-				if (ret != 0) return ret;
-			}
-			return 0;
-		}
-		for(int index: orderAttrsIndex) {
-			int result = this.data.get(index).compareTo(tp.data.get(index));
-			if(result != 0) {
-				return result;
-			}
-		}
-		return 0;
-		
 	}
 }

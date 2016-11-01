@@ -30,7 +30,7 @@ public class PhyPlanPrintVisitor implements PhyOpVisitor {
 	 */
 	@Override
 	public void visit(PhyDistOp phyDistOp) {
-		result += "Dist:\t" + phyDistOp.schema.toString() + "\n";
+		result += "Dist:\t" + phyDistOp.hasOrderby + " " + phyDistOp.schema.toString() + "\n";
 		phyDistOp.child.accept(this);
 	}
 
@@ -45,7 +45,7 @@ public class PhyPlanPrintVisitor implements PhyOpVisitor {
 		result += ("Join:\t" + phyJoinOp.schema + "\n");
 		phyJoinOp.child.accept(this);
 		phyJoinOp.rChild.accept(this);
-		result += ("\tOn Join Conditions: " + phyJoinOp.conditions.toString());
+		result += ("\tOn Join Conditions: " + phyJoinOp.conditions.toString() + "\n");
 	}
 
 	/*
