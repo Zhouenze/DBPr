@@ -8,6 +8,7 @@ import logicalPlan.LogPlanPrintVisitor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
+import physicalPlan.PhyJoinSMJOp;
 import physicalPlan.PhyPlan;
 import physicalPlan.PhyPlanPrintVisitor;
 
@@ -63,7 +64,13 @@ public class DBPrPro2Main {
 					//phyPlan.root.dumpReadable(null);
 					System.out.println();
 					phyPlan.root.reset();
-					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+//					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+//					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+//					((PhyJoinSMJOp)phyPlan.root.child.child).rChild.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "inner"));
+//					((PhyJoinSMJOp)phyPlan.root.child.child).child.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "outer"));
+					System.out.println(((PhyJoinSMJOp)phyPlan.root.child.child).rChild.schema);
+//					Tuple tp = ((PhyJoinSMJOp)phyPlan.root.child.child).rChild.getNextTuple();
+//					tp.print();
 
 				// Catch every exception so that the program can go on to next statement.
 				} catch (Exception e) {

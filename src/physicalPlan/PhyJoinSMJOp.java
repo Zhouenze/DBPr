@@ -1,6 +1,7 @@
 package physicalPlan;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import base.Condition;
@@ -30,6 +31,7 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 
 	@Override
 	public Tuple getNextTuple() {
+		
 		if (over)
 			return null;
 		
@@ -37,6 +39,21 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 			init = false;
 			outer = child.getNextTuple();
 			inner = rChild.getNextTuple();
+			
+//			try {
+//				child.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "outer"));
+//				rChild.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "inner"));
+//				child.reset();
+//				rChild.reset();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			
+			if (inner == null || outer == null) {
+				over = true;
+				return null;
+			}
 			
 		} else {	// TR is valid except when initialization
 					// If next valid tuple is in the same group, it can be detected here
@@ -50,6 +67,9 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 			if (inner == null) {
 				outer = child.getNextTuple();
 				if (outer == null) {
+					
+//					System.out.println("outerEnd");
+					
 					over = true;
 					return null;
 				}
@@ -63,6 +83,10 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 				}
 			}
 			
+//			outer.print();
+//			inner.print();
+//			System.out.println();
+			
 			if (compareOI(outer, inner) == 0) {
 				Tuple join = new Tuple();
 				for(int i: outer.data) {
@@ -75,6 +99,9 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 			}
 			
 			if (savedInner == null) {
+				
+				System.out.println("savedInner");
+				
 				over = true;
 				return null;
 			}
@@ -83,6 +110,11 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 		
 		// The last group has passed, find next valid group here.
 		while (true) {
+			
+//			outer.print();
+//			inner.print();
+//			System.out.println();
+			
 			int cmp = compareOI(outer, inner);
 			if (cmp == 0) {
 				refreshFile();			//jump the first one!
@@ -92,15 +124,22 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 				for(int j: inner.data)
 					join.data.add(j);
 				return join;
-			} else if (cmp < 0) {
+			} else if (cmp > 0) {
+//				inner.print();
 				inner = rChild.getNextTuple();
 				if (inner == null) {
+					
+					System.out.println("cmp > 0");
+					
 					over = true;
 					return null;
 				}
 			} else {
 				outer = child.getNextTuple();
 				if (outer == null) {
+					
+					System.out.println("cmp < 0");
+					
 					over = true;
 					return null;
 				}
@@ -109,23 +148,30 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 	}
 	
 	void refreshFile() {
-		File file = new File(filePath);
-		if (file.exists())
-			file.delete();
+
 		try {
+			if (TR != null)
+				TR.close();
+			File file = new File(filePath);
+			if (file.exists())
+				file.delete();
+			
 			TupleWriter TW = new TupleWriter(filePath);
 			TW.setNextTuple(inner);
 			Tuple temp = rChild.getNextTuple();
 			while (temp != null && compareII(temp, inner) == 0) {
 				TW.setNextTuple(temp);
+				
+//				temp.print();
+				
 				temp = rChild.getNextTuple();
 			}
+//			System.out.println();
+			
 			savedInner = temp;
 			if (!TW.bufferEmpty())
 				TW.fillFlush();
 			TW.close();
-			if (TR != null)
-				TR.close();
 			TR = new TupleReader(filePath);
 			TR.getNextTuple();
 		} catch (IOException e) {
@@ -161,6 +207,7 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 	}
 	
 	private int compareOI(Tuple outer, Tuple inner) {
+		
 		for (Condition cond : conditions) {
 			int ou = outer.data.get(child.schema.get(cond.leftName));
 			int in = inner.data.get(rChild.schema.get(cond.rightName));

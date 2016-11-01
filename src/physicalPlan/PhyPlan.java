@@ -121,6 +121,16 @@ public class PhyPlan implements LogOpVisitor {
 			logJoinOp.child.accept(this);
 			break;
 		case 1:
+			joinOp = new PhyJoinBNLJOp(joinBuffer);
+			if (logPlan.dataRoot == logJoinOp)
+				dataRoot = joinOp;
+			
+			temp.child = joinOp;
+			temp = joinOp;
+			r = true;
+			logJoinOp.rChild.accept(this);
+			r = false;
+			logJoinOp.child.accept(this);
 			break;
 		case 2:
 			joinOp = new PhyJoinSMJOp();
@@ -129,8 +139,17 @@ public class PhyPlan implements LogOpVisitor {
 			
 			temp.child = joinOp;
 			
-			joinOp.child = new PhySortExOp(sortBuffer);
-			joinOp.rChild = new PhySortExOp(sortBuffer);
+			switch (sortType) {
+			case 0:
+			default:
+				joinOp.child = new PhySortBfOp();
+				joinOp.rChild = new PhySortBfOp();
+				break;
+			case 1:
+				joinOp.child = new PhySortExOp(sortBuffer);
+				joinOp.rChild = new PhySortExOp(sortBuffer);
+				break;
+			}
 			
 			r = false;
 			temp = joinOp.rChild;
@@ -179,6 +198,10 @@ public class PhyPlan implements LogOpVisitor {
 			((PhyJoinOp)temp).rChild = scanOp;
 		} else {
 			temp.child = scanOp;
+		}
+		
+		if (temp instanceof PhyJoinBNLJOp) {
+			((PhyJoinBNLJOp)temp).setLeftFile(DBCatalog.getCatalog().tables.get(scanOp.fileName).size(), DBCatalog.getCatalog().inputPath + scanOp.fileName);
 		}
 	}
 
