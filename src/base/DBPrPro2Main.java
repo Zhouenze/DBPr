@@ -83,11 +83,16 @@ public class DBPrPro2Main {
 					// Build physical plan and run it.
 					PhyPlan phyPlan = new PhyPlan(plan);
 					PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
-					System.out.println("php plan printer" + phyPlanPrinter.printPhyPlan(phyPlan));
+					System.out.println("phy plan printer" + phyPlanPrinter.printPhyPlan(phyPlan));
 
 					//phyPlan.root.dumpReadable(null);
-					System.out.println();
+					long startTime = System.currentTimeMillis();
 					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i));
+					long endTime = System.currentTimeMillis();
+					long runtime = endTime - startTime;
+					System.out.println("Run time of query" + i + ": " + runtime);
+					System.out.println();
+					System.out.println();
 					phyPlan.root.reset();
 					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++ + "Readable"));
 					
