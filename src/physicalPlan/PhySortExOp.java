@@ -18,29 +18,31 @@ import base.TupleWriter;
 
 /**
  * External Sort
- * 
+ * This is the operator for external sort, which performs the sort
+ * by first using B buffer pages to internally sort all the tuples from child into several partial sorted runs,
+ * and then merging those runs into bigger sorted runs pass by pass,
+ * until all merge into one whole result table.
  * 
  * @author Shuang Zhang sz468
  *
  */
 
 public class PhySortExOp extends PhySortOp {
-	// clear tempsubdir and count = 0
-	// 
 	
 	public static int count = 0;                                        // Number of External Sort Operators in current query
-	public String tempsubdir = DBCatalog.getCatalog().tempPath;         // Path of the sub-directory of this operator 防止count同时变了，contaminate了path
+	public String tempsubdir = DBCatalog.getCatalog().tempPath;         // Path of the sub-directory of this operator
 	// DBCatalog.getCatalog().tempPath; 
 	public TupleReader TR = null;                                       // The Tuple Reader for reading and returning sort result
 	public int B;                                                       // Number of Buffer Pages to be used in the sort
 	public PriorityQueue<Tuple> internal = null;                        // Buffer to store B page of child tuples
 	public boolean isSorted = false;                                    // flag of whether the sort has been performed or not
 	public boolean binary = true;                                       // flag of whether binary or human-readable format is used for scratch files (for debugging)
-	public Vector<Integer> sortAttrsIndex = null;
+	public Vector<Integer> sortAttrsIndex = null;                       // Index of the attributes the tuples from child operator will be sorted on
 	
 	
 	/*
-	 * Constructor of External Sort with given # of buffer pages
+	 * Constructor of External Sort with given # of buffer pages 
+	 * and with associated sub-directory built accordingly to store "scratch" files
 	 */
 	public PhySortExOp(int BufferPages) {
 		B = BufferPages;
@@ -54,7 +56,11 @@ public class PhySortExOp extends PhySortOp {
 		}
 	}
 	
-	
+	/*
+	 * Method that returns next tuple in the output of this node.
+	 * @override from super class Operator
+	 * @return next tuple in the output of this node.
+	 */
 	@Override
 	public Tuple getNextTuple() {
 		if(!isSorted) {
@@ -88,6 +94,10 @@ public class PhySortExOp extends PhySortOp {
 		return null;
 	}
 	
+	/*
+	 * Method that resets output of this node to the beginning.
+	 * @override from super class Operator
+	 */
 	@Override
 	public void reset() { // ? will it ever be reset before sorting?
 		if(TR == null) {
@@ -114,7 +124,7 @@ public class PhySortExOp extends PhySortOp {
 		int numPerRun = B * 4096 / (schema.size() * 4); // # of tuples per run given in Pass0
 		boolean buildMore;
 		int numRuns = 0;
-		if(sortAttrsIndex == null) { // ? could only be called once?
+		if(sortAttrsIndex == null) {
 			this.buildAttrsIndex();
 		}
 		exComparator myComp = new exComparator();
@@ -132,7 +142,7 @@ public class PhySortExOp extends PhySortOp {
 			}
 			while(!internal.isEmpty()) {
 //				System.out.println(internal.peek().data);
-				TW.setNextTuple(internal.poll()); // ? write
+				TW.setNextTuple(internal.poll()); 
 			}
 			// leftover, fill with zero and write out
 			if(!TW.bufferEmpty()) {       // TW would never know the end of writing
@@ -161,7 +171,7 @@ public class PhySortExOp extends PhySortOp {
 		int pass = 1;
 		int numRunsToBuild = 0;
 		PriorityQueue<Tuple> tempMerg = new PriorityQueue<Tuple>(myComp);
-		Integer marker = null; // 
+		Integer marker = null;
 		while(true) {
 			// last pass:  pass-1 , # runs: numRuns;
 			// this pass:   pass  , # runs: numRunsToBuild;
@@ -186,7 +196,7 @@ public class PhySortExOp extends PhySortOp {
 						continue;
 					}
 					tempMerg.offer(temp);
-					findReader.put(temp, k); // ? will there ever be duplicated temp?
+					findReader.put(temp, k);
 				}
 				
 				TupleWriter TW;
@@ -268,7 +278,7 @@ public class PhySortExOp extends PhySortOp {
 	/*
 	 * Method to buffer B page's worth tuples to do internal sort in Pass 0
 	 */
-	private boolean buildHeap(int numPerRun){ // ? is it possible to call it the first time and child has no tuple?
+	private boolean buildHeap(int numPerRun){ 
 		Tuple temp;
 		int i = 0;
 		while(i < numPerRun && (temp = child.getNextTuple()) != null) {
