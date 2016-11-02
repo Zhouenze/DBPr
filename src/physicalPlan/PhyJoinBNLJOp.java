@@ -96,7 +96,7 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 		Tuple temp;
 		
 		try {
-			while ((tupleBlock.size() <= tuplesPerBlock) && ((temp = tupleReader.getNextTuple()) != null) ) {
+			while ((tupleBlock.size() < tuplesPerBlock) && ((temp = tupleReader.getNextTuple()) != null) ) {
 				tupleBlock.add(temp);
 			}
 		} catch (Exception e) {
