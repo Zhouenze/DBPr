@@ -17,8 +17,9 @@ import base.TupleReader;
  */
 public class PhyJoinBNLJOp extends PhyJoinOp {
 	
-	public TupleReader tupleReader = null;
-	public String leftFileName;
+//	public TupleReader tupleReader = null;
+//	public String leftFileName;
+	private int attrCounts;
 	private int bufferSizeInPages;
 	private int tuplesPerBlock;
 	private List<Tuple> tupleBlock;
@@ -26,7 +27,7 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 	private boolean blockStarted = false;
 	
 
-	private int numberOfAttributesLeftFile;
+	
 	
 	public Tuple rightTuple = null;	// The right tuple now. This need to be an element of class
 								// because it should keep between different calls to getNextTuple().
@@ -62,22 +63,15 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 	 * 
 	 */
 	public void setLeftFile(int attrCount, String lname) {
-		numberOfAttributesLeftFile = attrCount;
-		leftFileName = lname;
+		attrCounts = attrCount;
 		computeNumberOfTuplesPerBlock();
-		try {
-			tupleReader = new TupleReader(lname);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	/**
 	 * compute number of tuples that can be put in a block
 	 */
 	public void computeNumberOfTuplesPerBlock() {
-		tuplesPerBlock = (int)Math.floor((double)bufferSizeInPages * 4096 / (4 * numberOfAttributesLeftFile));
+		tuplesPerBlock = (int)Math.floor((double)bufferSizeInPages * 4096 / (4 * attrCounts));
 	}
 	
 	/**
@@ -96,7 +90,7 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 		Tuple temp;
 		
 		try {
-			while ((tupleBlock.size() < tuplesPerBlock) && ((temp = tupleReader.getNextTuple()) != null) ) {
+			while ((tupleBlock.size() < tuplesPerBlock) && ((temp = child.getNextTuple()) != null) ) {
 				tupleBlock.add(temp);
 			}
 		} catch (Exception e) {
@@ -117,13 +111,11 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 			blockStarted = true;  
 			fillTupleBlock();
 			rightTuple = rChild.getNextTuple();
+			
 		}
-		
-		
-		
-		while (tupleBlock.size() > 0) {		//tupleBlock has no tuple means all the block has been read
-			while (rightTuple != null) {	
-				while (innerIndex <  tupleBlock.size()) {		//innerIndex keeps track of which is the current tuple used
+		while (tupleBlock.size() > 0) {
+			while (rightTuple != null) {
+				while (innerIndex < tupleBlock.size()) {
 					Tuple join = new Tuple();
 					Tuple leftTuple = tupleBlock.get(innerIndex++);
 					for (int i: leftTuple.data) {
@@ -144,13 +136,12 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 						}
 					}
 				}
-				innerIndex = 0;	//reseting innerindex and rightTuple
+				innerIndex = 0;
 				rightTuple = rChild.getNextTuple();
-				
 			}
-			fillTupleBlock();	//if rightTuple is null, we need to fill the block again.
-			if (tupleBlock.size() == 0) return null;	//if nothing left after block fill, no more tuple
-			rChild.reset(); 	//reset inner relation for read
+			fillTupleBlock();
+			if (tupleBlock.size() == 0) return null;
+			rChild.reset();
 			rightTuple = rChild.getNextTuple();
 		}
 		return null;
@@ -163,13 +154,7 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 	@Override
 	public void reset() {
 		blockStarted = false;	//reset some of the bookkeeping variables and reopen tupleReader
-		innerIndex = 0;
-		try {
-			tupleReader = new TupleReader(leftFileName);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		resetBlock();
 		
 		child.reset();
 		rChild.reset();
