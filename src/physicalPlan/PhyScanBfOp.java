@@ -14,11 +14,11 @@ import base.TupleReader;
  * 
  * @authors Enze Zhou ez242 Weicheng Yu wy248
  */
-public class PhyScanBfOp extends PhyScanOp {
+public final class PhyScanBfOp extends PhyScanOp {
 	
 	
-	public TupleReader tupleReader;		// Reader for binary file.
-	public boolean read = false;
+	private TupleReader tupleReader;		// Reader for binary file.
+	private boolean read = false;
 	
 	
 	/*

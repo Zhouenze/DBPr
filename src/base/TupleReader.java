@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-public class TupleReader {
-	public String fileName;
+public final class TupleReader {
+	private String fileName;
 	private FileChannel FC;
 	private ByteBuffer BB;
 	private int tupleIndex;
@@ -30,7 +30,7 @@ public class TupleReader {
 	/*
 	 * Method that is used to read meta data
 	 */
-	public int readTupleInfo() throws IOException {
+	private int readTupleInfo() throws IOException {
 		//read tuple meta data
 		int ret = FC.read(BB);
 		if (ret > 0){

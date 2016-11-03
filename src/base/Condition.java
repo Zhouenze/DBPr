@@ -18,8 +18,8 @@ public final class Condition {
 	
 	public String leftName = "";	// Name of the left part of this expression. If null, left part is a instant number indicated by left.
 	public String rightName = "";	// Name of the right part of this expression. If null, right part is a instant number indicated by right.
-	public int left = 0;			// Instant left number if leftName is null.
-	public int right = 0;			// Instant right number if rightName is null.
+	private int left = 0;			// Instant left number if leftName is null.
+	private int right = 0;			// Instant right number if rightName is null.
 	
 	/*
 	 * Constructor that build a condition from a string.

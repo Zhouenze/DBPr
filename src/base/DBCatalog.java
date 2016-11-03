@@ -13,7 +13,7 @@ import java.util.Vector;
  * 
  * @author Enze Zhou ez242
  */
-public class DBCatalog {
+public final class DBCatalog {
 	
 	private static DBCatalog catalog = new DBCatalog();		// The only instance of this class.
 	

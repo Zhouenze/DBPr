@@ -10,9 +10,9 @@ import base.Tuple;
  * 
  * @authors Enze Zhou ez242, Weicheng Yu wy248
  */
-public class PhyDistBfOp extends PhyDistOp {
+public final class PhyDistBfOp extends PhyDistOp {
 	
-	public PriorityQueue<Tuple> heap;   		// Buffer to store all child tuples.
+	private PriorityQueue<Tuple> heap;   		// Buffer to store all child tuples.
 	private Vector<Integer> lastTupleData;		// Recording last tuple to compare with current one.
 	
 	
@@ -73,7 +73,7 @@ public class PhyDistBfOp extends PhyDistOp {
 	/*
 	 * Method to put all output tuples of child in heap, in order to perform sorting.
 	 */
-	public void buildHeap(){
+	private void buildHeap(){
 		exComparator myComp = new exComparator();
 		heap = new PriorityQueue<Tuple>(myComp);
 		Tuple temp;

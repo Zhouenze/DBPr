@@ -9,7 +9,7 @@ import java.util.Vector;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class Tuple {
+public final class Tuple {
 	
 	public Vector<Integer> data = null;							// Integers in this Tuple.
 	

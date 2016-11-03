@@ -11,9 +11,9 @@ import base.Tuple;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class PhySortBfOp extends PhySortOp {
+public final class PhySortBfOp extends PhySortOp {
 
-	public PriorityQueue<Tuple> heap = null;   // Buffer to store all child tuples.
+	private PriorityQueue<Tuple> heap = null;   // Buffer to store all child tuples.
 	public Vector<Integer> sortAttrsIndex = null;
 
 	
@@ -48,7 +48,7 @@ public class PhySortBfOp extends PhySortOp {
 	/*
 	 * Method to put all output tuples of child in heap, in order to perform sorting.
 	 */
-	public void buildHeap(){
+	private void buildHeap(){
 		if(sortAttrsIndex == null) { // ? could only be called once?
 			this.buildAttrsIndex();
 		}

@@ -14,20 +14,20 @@ import base.TupleWriter;
  * 
  * @author Enze Zhou ez242
  */
-public class PhyJoinSMJOp extends PhyJoinOp{
+public final class PhyJoinSMJOp extends PhyJoinOp{
 	
-	String filePath = "";		// The size of the inner block that match the outer maybe very big, so I use a file to buffer it, 
-								// because later we need to return to the beginning of it.
-	TupleReader TR = null;		// Read from the file above.
-	Tuple savedInner = null;	// When buffering inner block to file, the end is determined by a tuple that no longer match the outer.
-								// It needs to be saved because if we call getNextTuple to get next one, this one will be lost.
-	static int count = 0;		// Because tuples are buffered in a file, we need a way to distinguish different files.
+	private String filePath = "";		// The size of the inner block that match the outer maybe very big, so I use a file to buffer it, 
+										// because later we need to return to the beginning of it.
+	private TupleReader TR = null;		// Read from the file above.
+	private Tuple savedInner = null;	// When buffering inner block to file, the end is determined by a tuple that no longer match the outer.
+										// It needs to be saved because if we call getNextTuple to get next one, this one will be lost.
+	private static int count = 0;		// Because tuples are buffered in a file, we need a way to distinguish different files.
 	
-	Tuple outer = null;
-	Tuple inner = null;
+	private Tuple outer = null;
+	private Tuple inner = null;
 	
-	boolean over = false;		// Whether the output is over.
-	boolean init = true;		// Whether it's the first getNextTuple operation. This is needed to do some initialization.
+	private boolean over = false;		// Whether the output is over.
+	private boolean init = true;		// Whether it's the first getNextTuple operation. This is needed to do some initialization.
 	
 	/*
 	 * Constructor of this operator
@@ -131,7 +131,7 @@ public class PhyJoinSMJOp extends PhyJoinOp{
 	/*
 	 * This function is used to refresh the buffer file to get all the inner tuples in the matching group in it.
 	 */
-	void refreshFile() {
+	private void refreshFile() {
 
 		try {
 			// Close reader and delete invalid file.

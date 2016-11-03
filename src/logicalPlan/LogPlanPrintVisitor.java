@@ -4,7 +4,7 @@ package logicalPlan;
  * 
  * @author Enze Zhou ez242
  */
-public class LogPlanPrintVisitor implements LogOpVisitor {
+public final class LogPlanPrintVisitor implements LogOpVisitor {
 	
 	String result = "";		// Print result
 	

@@ -51,7 +51,7 @@ public abstract class PhyOp {
 	 * @param out
 	 * 		The stream to be dump to.
 	 */
-	public void dump(OutputStream out) throws IOException {
+	public final void dump(OutputStream out) throws IOException {
 		TupleWriter TW = new TupleWriter(out);
 		Tuple temp;
 		while ((temp = this.getNextTuple()) != null) {

@@ -10,7 +10,7 @@ import java.util.Random;
  * 
  * @author Enze Zhou ez242
  */
-public class dataGenerator {
+public final class dataGenerator {
 	
 	/*
 	 * Function that generate random test data.

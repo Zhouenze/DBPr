@@ -27,16 +27,16 @@ import base.TupleWriter;
  *
  */
 
-public class PhySortExOp extends PhySortOp {
+public final class PhySortExOp extends PhySortOp {
 	
-	public static int count = 0;                                        // Number of External Sort Operators in current query
-	public String tempsubdir = DBCatalog.getCatalog().tempPath;         // Path of the sub-directory of this operator
+	private static int count = 0;                                        // Number of External Sort Operators in current query
+	private String tempsubdir = DBCatalog.getCatalog().tempPath;         // Path of the sub-directory of this operator
 	// DBCatalog.getCatalog().tempPath; 
-	public TupleReader TR = null;                                       // The Tuple Reader for reading and returning sort result
-	public int B;                                                       // Number of Buffer Pages to be used in the sort
-	public PriorityQueue<Tuple> internal = null;                        // Buffer to store B page of child tuples
-	public boolean isSorted = false;                                    // flag of whether the sort has been performed or not
-	public boolean binary = true;                                       // flag of whether binary or human-readable format is used for scratch files (for debugging)
+	private TupleReader TR = null;                                       // The Tuple Reader for reading and returning sort result
+	private int B;                                                       // Number of Buffer Pages to be used in the sort
+	private PriorityQueue<Tuple> internal = null;                        // Buffer to store B page of child tuples
+	private boolean isSorted = false;                                    // flag of whether the sort has been performed or not
+//	public boolean binary = true;                                       // flag of whether binary or human-readable format is used for scratch files (for debugging)
 	public Vector<Integer> sortAttrsIndex = null;                       // Index of the attributes the tuples from child operator will be sorted on
 	
 	
@@ -115,7 +115,7 @@ public class PhySortExOp extends PhySortOp {
 	/*
 	 * Method to perform external sort and write out the Full Sorted File
 	 */
-	public void externalSort() throws IOException{
+	private void externalSort() throws IOException{
 		/*
 		 *  Pass 0: internal sort
 		 */

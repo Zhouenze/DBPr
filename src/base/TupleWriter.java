@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-public class TupleWriter {
+public final class TupleWriter {
 	//private String fileName;
 	private FileChannel FC;
 	private ByteBuffer BB;
@@ -40,7 +40,7 @@ public class TupleWriter {
 	/*
 	 * Method that is used to set meta data
 	 */
-	public void setTupleInfo() throws IOException {
+	private void setTupleInfo() throws IOException {
 		//first two ints for meta data
 		tupleIndex = 8;
 		tupleCurrentCounts = 0;
@@ -57,7 +57,7 @@ public class TupleWriter {
 	 * @param size: size of a record
 	 * Method that is used to set meta data tuple size
 	 */
-	public void setTupleSize(int size) {
+	private void setTupleSize(int size) {
 		sizeSet = true;
 		tupleSize = size;
 		BB.putInt(0, size);
@@ -67,7 +67,7 @@ public class TupleWriter {
 	 * @param toAdd: a tuple to be added to the buffer
 	 * Method that is used to prepare for adding tuples
 	 */
-	public void addTuple(Tuple toAdd) {
+	private void addTuple(Tuple toAdd) {
 		for (int i = 0; i < tupleSize; ++i) {
 			BB.putInt(tupleIndex, toAdd.data.elementAt(i));
 			tupleIndex += 4;
@@ -94,7 +94,7 @@ public class TupleWriter {
 	/*
 	 * Method that is used to truly clear a buffer by setting unused portion to be 0s
 	 */
-	public void fillZeros() {
+	private void fillZeros() {
 		for (int i = tupleIndex; i < BB.capacity(); ++i)
 			BB.put(i, (byte) 0);//fill with 0s
 	}
@@ -102,7 +102,7 @@ public class TupleWriter {
 	/*
 	 * Method that is used to flush the buffer to file and clear the buffer
 	 */
-	public void flush() throws IOException {
+	private void flush() throws IOException {
 		tupleIndex = 8;
 		tupleCurrentCounts = 0;
 		BB.clear();

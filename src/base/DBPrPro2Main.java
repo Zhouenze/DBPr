@@ -19,7 +19,7 @@ import physicalPlan.PhyPlanPrintVisitor;
  * 
  * @author Enze Zhou ez242
  */
-public class DBPrPro2Main {
+public final class DBPrPro2Main {
 	
 	/*
 	 * Function that delete everything referred by path.

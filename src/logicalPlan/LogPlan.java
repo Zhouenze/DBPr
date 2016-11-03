@@ -21,7 +21,7 @@ import net.sf.jsqlparser.statement.select.Union;
  * 
  * @author Enze Zhou ez242
  */
-public class LogPlan implements SelectVisitor, FromItemVisitor {
+public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	
 	private LogSortOp sort = null;						// Sort logical operator in this plan.
 	private LogProjOp proj = null;						// Projection logical operator in this plan.

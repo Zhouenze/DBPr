@@ -5,9 +5,9 @@ package physicalPlan;
  * 
  * @author Enze Zhou ez242
  */
-public class PhyPlanPrintVisitor implements PhyOpVisitor {
+public final class PhyPlanPrintVisitor implements PhyOpVisitor {
 	
-	String result = "";		// Print result
+	private String result = "";		// Print result
 	
 	/*
 	 * Method to print a physical plan.

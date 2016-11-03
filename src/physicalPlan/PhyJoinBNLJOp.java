@@ -12,7 +12,7 @@ import base.Tuple;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468, Weicheng Yu wy248
  */
-public class PhyJoinBNLJOp extends PhyJoinOp {
+public final class PhyJoinBNLJOp extends PhyJoinOp {
 	
 //	public TupleReader tupleReader = null;
 //	public String leftFileName;
@@ -26,9 +26,8 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 
 	
 	
-	public Tuple rightTuple = null;	// The right tuple now. This need to be an element of class
-								// because it should keep between different calls to getNextTuple().
-	boolean end = false;		// denote whether this node has already be fully got.
+	private Tuple rightTuple = null;	// The right tuple now. This need to be an element of class
+										// because it should keep between different calls to getNextTuple().
 
 	/*
 	 * Constructor for BNLJ
@@ -67,14 +66,14 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 	/**
 	 * compute number of tuples that can be put in a block
 	 */
-	public void computeNumberOfTuplesPerBlock() {
+	private void computeNumberOfTuplesPerBlock() {
 		tuplesPerBlock = (int)Math.floor((double)bufferSizeInPages * 4096 / (4 * attrCounts));
 	}
 	
 	/**
 	 * reset block by clearing the block and setting its inner index to 0
 	 */
-	public void resetBlock() {
+	private void resetBlock() {
 		innerIndex = 0;
 		tupleBlock.clear();
 	}
@@ -82,7 +81,7 @@ public class PhyJoinBNLJOp extends PhyJoinOp {
 	/**
 	 * first reset tuple block and then fill tupleBlock until either block is full or no more tuples to read from
 	 */
-	public void fillTupleBlock() {
+	private void fillTupleBlock() {
 		resetBlock();
 		Tuple temp;
 		

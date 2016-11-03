@@ -7,7 +7,7 @@ import base.Tuple;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class PhyProjBfOp extends PhyProjOp {
+public final class PhyProjBfOp extends PhyProjOp {
 
 	/*
 	 * Method that returns next tuple in the output of this node.

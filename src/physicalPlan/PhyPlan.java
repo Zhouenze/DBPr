@@ -19,18 +19,18 @@ import logicalPlan.LogSortOp;
  * 
  * @author Enze Zhou ez242
  */
-public class PhyPlan implements LogOpVisitor {
+public final class PhyPlan implements LogOpVisitor {
 
 	String query = "";			// Original query.
-	PhyOp temp = null;			// Used for building process.
-	PhyCondOp dataRoot = null;	// Root node of the data part of this plan, maybe a join operator or a scan operator.
-	LogPlan logPlan = null;		// Logical plan that is being translated.
-	boolean r = false;			// Whether is building the right child of temp. Used for join tree building.
+	private PhyOp temp = null;			// Used for building process.
+	public PhyCondOp dataRoot = null;	// Root node of the data part of this plan, maybe a join operator or a scan operator.
+	private LogPlan logPlan = null;		// Logical plan that is being translated.
+	private boolean r = false;			// Whether is building the right child of temp. Used for join tree building.
 	
 	
 	public PhyOp root = null;	// Root node of this physical plan.
 	
-	int joinType, joinBuffer, sortType, sortBuffer;		// The configuration of this plan.
+	private int joinType, joinBuffer, sortType, sortBuffer;		// The configuration of this plan.
 	
 	/*
 	 * Another constructor of this class, ready for future usage.
@@ -267,7 +267,7 @@ public class PhyPlan implements LogOpVisitor {
 	 * 		The condition that is being attached.
 	 * @return whether the condition is successfully attached.
 	 */
-	boolean conditionDis(PhyOp op, Condition cond) {
+	private boolean conditionDis(PhyOp op, Condition cond) {
 		if (op == null)
 			return false;
 		
@@ -297,7 +297,7 @@ public class PhyPlan implements LogOpVisitor {
 	 * @param
 	 * 		op the operator that is trying to distribute sort attributes.
 	 */
-	void getSMJSortAttrs(PhyOp op) {
+	private void getSMJSortAttrs(PhyOp op) {
 		if (op == null)
 			return;
 		if (op instanceof PhyJoinSMJOp) {

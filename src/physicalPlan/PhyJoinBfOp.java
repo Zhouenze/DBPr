@@ -9,11 +9,11 @@ import base.Tuple;
  * 
  * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
-public class PhyJoinBfOp extends PhyJoinOp {
+public final class PhyJoinBfOp extends PhyJoinOp {
 	
-	public Tuple left = null;	// The left tuple now. This need to be an element of class
+	private Tuple left = null;	// The left tuple now. This need to be an element of class
 								// because it should keep between different calls to getNextTuple().
-	boolean end = false;		// denote whether this node has already be fully got.
+	private boolean end = false;		// denote whether this node has already be fully got.
 
 	/*
 	 * Method that returns next tuple in the output of this node.
