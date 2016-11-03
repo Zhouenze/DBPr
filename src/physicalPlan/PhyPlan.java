@@ -1,7 +1,6 @@
 package physicalPlan;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.Vector;
 
 import base.Condition;
 import base.DBCatalog;

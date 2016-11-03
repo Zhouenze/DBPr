@@ -1,19 +1,16 @@
 package physicalPlan;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import base.Condition;
 import base.Tuple;
-import base.TupleReader;
 
 /*
  * Brute force implementation of join operator
  * Operator that joins the outputs of its two children, both are Scan Operators inferred by Operator pointer.
  * Inherited from PhyCondOp to have a conditions vector that is used to filter the output tuples of this node.
  * 
- * @authors Enze Zhou ez242, Shuang Zhang sz46. Weicheng Yu wy248
+ * @authors Enze Zhou ez242, Shuang Zhang sz468, Weicheng Yu wy248
  */
 public class PhyJoinBNLJOp extends PhyJoinOp {
 	

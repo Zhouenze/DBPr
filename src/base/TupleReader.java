@@ -9,7 +9,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Vector;
 
 public class TupleReader {
 	public String fileName;
@@ -87,6 +86,7 @@ public class TupleReader {
 	/*
 	 * Method that is used to reset tuple reader
 	 */
+	@SuppressWarnings("resource")
 	public void reset() throws IOException {
 		FC.close();
 		FC = new FileInputStream(fileName).getChannel();

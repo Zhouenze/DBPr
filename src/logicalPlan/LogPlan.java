@@ -78,6 +78,10 @@ public class LogPlan implements SelectVisitor, FromItemVisitor {
 				String str = orderIterator.next().toString();
 				sort.sortAttrs.add(str);
 			}
+		} else if (temp != null) {
+			((LogDistOp)temp).hasOrderby = true;
+			temp.child = sort = new LogSortOp();
+			temp = temp.child;
 		}
 		
 		// Make a projection operator which is mandatory.
