@@ -39,6 +39,7 @@ public final class PhyJoinBNLJOp extends PhyJoinOp {
 	 * so that tuple readers can be used
 	 */
 	public PhyJoinBNLJOp(int bufferPages) {
+		super();
 		bufferSizeInPages = bufferPages;
 		tupleBlock = new LinkedList<Tuple>();
 	}

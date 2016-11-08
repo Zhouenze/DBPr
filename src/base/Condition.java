@@ -18,8 +18,8 @@ public final class Condition {
 	
 	public String leftName = "";	// Name of the left part of this expression. If null, left part is a instant number indicated by left.
 	public String rightName = "";	// Name of the right part of this expression. If null, right part is a instant number indicated by right.
-	private int left = 0;			// Instant left number if leftName is null.
-	private int right = 0;			// Instant right number if rightName is null.
+	public int left = 0;			// Instant left number if leftName is null.
+	public int right = 0;			// Instant right number if rightName is null.
 	
 	/*
 	 * Constructor that build a condition from a string.
@@ -53,6 +53,10 @@ public final class Condition {
 		} else {
 			rightName = parts[2];
 		}
+		
+		// Flip the condition to a more favorable direction.
+		if (leftName == null && rightName != null)
+			flip();
 	}
 	
 	/*
@@ -107,10 +111,17 @@ public final class Condition {
 				(rightName == null ? String.valueOf(right) : rightName);
 	}
 	
+	/*
+	 * This function change the direction of this condition while keeping the meaning of it.
+	 * This assumption is used in index scan.
+	 */
 	public void flip() {
 		String temp = leftName;
 		leftName = rightName;
 		rightName = temp;
+		int temp2 = left;
+		left = right;
+		right = temp2;
 		switch (operator) {
 		case l:
 			operator = op.g;

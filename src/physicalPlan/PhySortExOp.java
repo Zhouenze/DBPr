@@ -45,6 +45,7 @@ public final class PhySortExOp extends PhySortOp {
 	 * and with associated sub-directory built accordingly to store "scratch" files
 	 */
 	public PhySortExOp(int BufferPages) {
+		super();
 		B = BufferPages;
 		count++;
 		tempsubdir += "sub" + count + "/";
@@ -54,6 +55,17 @@ public final class PhySortExOp extends PhySortOp {
 		} catch (IOException e) {
 		    System.err.println("Cannot create directories - " + e);
 		}
+	}
+	
+	/*
+	 * Get the path to result for this sort operator. This is used when building clustered index and replacing the original data.
+	 * Just use the sort result file to replace the original one.
+	 * @return
+	 * 		Path to result file.
+	 */
+	public String getResultPath() {
+		String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/sortResult" : "\\sortResult");
+		return tempsubdir + append;
 	}
 	
 	/*

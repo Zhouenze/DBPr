@@ -18,6 +18,7 @@ public final class TupleReader {
 	private int tupleSize;
 	private int tupleCounts;
 	private int tupleCurrentCounts;
+	private int tupleCurrentPages = -1;
 	
 	@SuppressWarnings("resource")
 	public TupleReader(String filename) throws IOException {
@@ -25,6 +26,8 @@ public final class TupleReader {
 		FC = new FileInputStream(filename).getChannel();
 		BB = ByteBuffer.allocate(4096); //hardcoded page size
 		readTupleInfo();
+		
+		tupleCurrentPages = 0;
 	}
 	
 	/*
@@ -33,12 +36,73 @@ public final class TupleReader {
 	private int readTupleInfo() throws IOException {
 		//read tuple meta data
 		int ret = FC.read(BB);
+		BB.flip();
 		if (ret > 0){
 			tupleSize = BB.getInt(0);
 			tupleCounts = BB.getInt(4);
 			tupleIndex = 8;
-			tupleCurrentCounts = 0;	
+			tupleCurrentCounts = 0;
+			++tupleCurrentPages;
 		}
+		return ret;
+	}
+	
+	/*
+	 * Jump some pages. This function is only called by index scan operator 
+	 * when it needs to jump to the first valid tuple in a clustered relation.
+	 * @param
+	 * 		pageCount: 	number of pages to jump. If we want to go to page ID 6, we jump 6 pages to go there because this function is
+	 * 					called immediately after initialization where one page has already been read..
+	 */
+	public void jumpPages(int pageCount) {
+		try {
+			int ret = 0;
+			for (int i = 0; i < pageCount; ++i) {
+				ret = FC.read(BB);
+				BB.flip();
+			}
+			tupleCurrentPages += pageCount;
+			if (ret > 0){
+				tupleSize = BB.getInt(0);
+				tupleCounts = BB.getInt(4);
+				tupleIndex = 8;
+				tupleCurrentCounts = 0;	
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/*
+	 * Return the next key-rid pair in form of tuple.
+	 * @param
+	 * 		keyId: the index of key of this tuple.
+	 * @return
+	 * 		a tuple of three parts: key of this next tuple, page index and tuple index on this page
+	 */
+	public Tuple getNextKeyRid(int keyId) throws IOException{
+
+		// If a page has no tuple, return null directly 
+		if (tupleCounts == 0) return null;
+
+		Tuple ret = new Tuple();
+		if (tupleCurrentCounts < tupleCounts) {
+			ret.data.add(BB.getInt(tupleIndex + 4 * keyId));
+			tupleIndex += (tupleSize * 4);
+		} else {
+			BB.clear();
+			if (readTupleInfo() <= 0){
+				return null;
+			}
+			
+			ret.data.add(BB.getInt(tupleIndex + 4 * keyId));
+			tupleIndex += (tupleSize * 4);
+		}
+		
+		ret.data.add(tupleCurrentPages);
+		ret.data.add(tupleCurrentCounts);
+		
+		++tupleCurrentCounts;
 		return ret;
 	}
 	
@@ -93,6 +157,7 @@ public final class TupleReader {
 		BB.clear();
 		readTupleInfo();
 		
+		tupleCurrentPages = 0;
 	}
 	
 	

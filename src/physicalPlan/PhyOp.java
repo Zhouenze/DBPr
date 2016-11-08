@@ -44,6 +44,7 @@ public abstract class PhyOp {
 				dataOut.writeBytes((i == 0 ? temp.data.get(i).toString() : "," + temp.data.get(i)));
 			dataOut.write('\n');
 		}
+		dataOut.close();
 	}
 	
 	/*
@@ -59,6 +60,7 @@ public abstract class PhyOp {
 		}
 		if (!TW.bufferEmpty())
 			TW.fillFlush();
+		TW.close();
 	}
 	
 	

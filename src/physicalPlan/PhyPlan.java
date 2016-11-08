@@ -21,7 +21,7 @@ import logicalPlan.LogSortOp;
  */
 public final class PhyPlan implements LogOpVisitor {
 
-	String query = "";			// Original query.
+	String query = "";					// Original query.
 	private PhyOp temp = null;			// Used for building process.
 	public PhyCondOp dataRoot = null;	// Root node of the data part of this plan, maybe a join operator or a scan operator.
 	private LogPlan logPlan = null;		// Logical plan that is being translated.
@@ -30,7 +30,7 @@ public final class PhyPlan implements LogOpVisitor {
 	
 	public PhyOp root = null;	// Root node of this physical plan.
 	
-	private int joinType, joinBuffer, sortType, sortBuffer;		// The configuration of this plan.
+	private int joinType, joinBuffer, sortType, sortBuffer, scanType;		// The configuration of this plan.
 	
 	/*
 	 * Another constructor of this class, ready for future usage.
@@ -58,6 +58,8 @@ public final class PhyPlan implements LogOpVisitor {
 			sortType = Integer.valueOf(columns[0]);
 			if (sortType == 1)
 				sortBuffer = Integer.valueOf(columns[1]);
+			configLine = configReader.readLine();
+			scanType = Integer.valueOf(configLine.trim());
 	
 			configReader.close();
 		} catch (Exception e) {
@@ -84,6 +86,11 @@ public final class PhyPlan implements LogOpVisitor {
 		// The attributes to be sorted by under a sort-merge-join operator is set here.
 		if (joinType == 2 && dataRoot instanceof PhyJoinSMJOp)
 			getSMJSortAttrs(dataRoot);
+		
+		// Index scan operators need to be initialized here because they need to know their schema and build high-low value with conditions distributed above.
+		if (scanType == 1) {
+			initializeIndexScans(dataRoot);
+		}
 	}
 
 	/*
@@ -191,11 +198,20 @@ public final class PhyPlan implements LogOpVisitor {
 	 */
 	@Override
 	public void visit(LogScanOp logScanOp) {
-		PhyScanOp scanOp = new PhyScanBfOp();
+		
+		PhyScanOp scanOp = null;
+		String alias = logPlan.naiveJoinOrder.remove(logPlan.naiveJoinOrder.size() - 1);
+		String fileName = logPlan.aliasDict.get(alias);
+		if (scanType == 1 && DBCatalog.getCatalog().indexKeys.get(fileName) != null) {
+			scanOp = new PhyScanIndexOp(fileName, alias);         
+		} else {
+			scanOp = new PhyScanBfOp();
+			scanOp.alias = alias;
+			scanOp.fileName = fileName;
+		}
+		
 		if (logPlan.dataRoot == logScanOp)
 			dataRoot = scanOp;
-		scanOp.alias = logPlan.naiveJoinOrder.remove(logPlan.naiveJoinOrder.size() - 1);
-		scanOp.fileName = logPlan.aliasDict.get(scanOp.alias);
 		if (r) {
 			((PhyJoinOp)temp).rChild = scanOp;
 		} else {
@@ -204,8 +220,9 @@ public final class PhyPlan implements LogOpVisitor {
 		
 		// Additional initialization for BNLJ
 		if (temp instanceof PhyJoinBNLJOp) {
+			String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/" : "db\\data\\");
 			((PhyJoinBNLJOp)temp).setLeftFile(	DBCatalog.getCatalog().tables.get(scanOp.fileName).size(), 
-												DBCatalog.getCatalog().inputPath + "db/data/" + scanOp.fileName);
+												DBCatalog.getCatalog().inputPath + append + scanOp.fileName);
 		}
 	}
 
@@ -312,5 +329,26 @@ public final class PhyPlan implements LogOpVisitor {
 			}
 		}
 		getSMJSortAttrs(op.child);
+	}
+	
+	/*
+	 * This function is called recursively to initialize index scan operators.
+	 * @param
+	 * 		op: the operator that is trying to initialize index scan.
+	 */
+	private void initializeIndexScans(PhyOp op) {
+		if (op == null)
+			return;
+		if (op instanceof PhyJoinOp) {
+			initializeIndexScans(op.child);
+			initializeIndexScans(((PhyJoinOp) op).rChild);
+		} else if (op instanceof PhySortOp) {
+			initializeIndexScans(op.child);
+		} else if (op instanceof PhyScanBfOp) {
+			return;
+		} else if (op instanceof PhyScanIndexOp) {
+			((PhyScanIndexOp) op).initialize();
+		}
+		return;
 	}
 }
