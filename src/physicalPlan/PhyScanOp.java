@@ -17,8 +17,8 @@ public abstract class PhyScanOp extends PhyCondOp {
 	 */
 	@Override
 	public void buildSchema() {
-		for (int i = 0; i < DBCatalog.getCatalog().tables.get(fileName).size(); ++i) {
-			schema.put(alias + "." + DBCatalog.getCatalog().tables.get(fileName).get(i), i);
+		for (int i = 0; i < DBCatalog.getCatalog().tables.get(fileName).attrs.size(); ++i) {
+			schema.put(alias + "." + DBCatalog.getCatalog().tables.get(fileName).attrs.get(i).name, i);
 		}
 	}
 }

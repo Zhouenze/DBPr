@@ -23,6 +23,30 @@ import net.sf.jsqlparser.statement.select.Union;
  */
 public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	
+	
+	
+	
+	
+	public Vector<Condition> joinConditions = new Vector<>();
+	public class pushedConditions {
+		String attrName;
+		Integer lowValue;
+		Integer highValue;
+	}
+	public class scan {
+		String fileName;
+		String alias;
+		Vector<pushedConditions> conditions = new Vector<>();
+	}
+	public Vector<scan> joinChildren = new Vector<>();
+	public Vector<String> outputOrder = new Vector<>();
+	
+	
+	
+	
+	
+	
+	
 	private LogSortOp sort = null;						// Sort logical operator in this plan.
 	private LogProjOp proj = null;						// Projection logical operator in this plan.
 	

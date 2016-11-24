@@ -40,7 +40,7 @@ public class BTreeIndex {
 	public BTreeIndex(String fileName, String keyName, boolean clusteredOnKey, int order) {
 		this.fileName = fileName;
 		this.keyName = keyName;
-		this.keyId = DBCatalog.getCatalog().tables.get(fileName).indexOf(keyName);
+		this.keyId = DBCatalog.getCatalog().tables.get(fileName).findIdOfAttr(keyName);
 		this.clusteredOnKey = clusteredOnKey;
 		this.order = order;
 		

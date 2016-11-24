@@ -55,9 +55,9 @@ public class PhyScanIndexOp extends PhyScanOp {
 		super();
 		this.fileName = fileName;
 		this.alias = alias;
-		keyName = DBCatalog.getCatalog().indexKeys.get(fileName);
-		keyId = DBCatalog.getCatalog().tables.get(fileName).indexOf(keyName);
-		clustered = (DBCatalog.getCatalog().indexClustered.get(fileName) == 1);
+		keyName = DBCatalog.getCatalog().tables.get(fileName).indexes.get(0).keyName;
+		keyId = DBCatalog.getCatalog().tables.get(fileName).findIdOfAttr(keyName);
+		clustered = (DBCatalog.getCatalog().tables.get(fileName).indexes.get(0).clustered == 1);
 		String append = DBCatalog.getCatalog().inputPath.contains("/") ? "db/indexes/" : "db\\indexes\\";
 		indexPath = DBCatalog.getCatalog().inputPath + append + fileName + "." + keyName;
 		

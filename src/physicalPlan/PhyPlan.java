@@ -202,7 +202,7 @@ public final class PhyPlan implements LogOpVisitor {
 		PhyScanOp scanOp = null;
 		String alias = logPlan.naiveJoinOrder.remove(logPlan.naiveJoinOrder.size() - 1);
 		String fileName = logPlan.aliasDict.get(alias);
-		if (scanType == 1 && DBCatalog.getCatalog().indexKeys.get(fileName) != null) {
+		if (scanType == 1 && !DBCatalog.getCatalog().tables.get(fileName).indexes.isEmpty()) {
 			scanOp = new PhyScanIndexOp(fileName, alias);         
 		} else {
 			scanOp = new PhyScanBfOp();
@@ -221,7 +221,7 @@ public final class PhyPlan implements LogOpVisitor {
 		// Additional initialization for BNLJ
 		if (temp instanceof PhyJoinBNLJOp) {
 			String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/" : "db\\data\\");
-			((PhyJoinBNLJOp)temp).setLeftFile(	DBCatalog.getCatalog().tables.get(scanOp.fileName).size(), 
+			((PhyJoinBNLJOp)temp).setLeftFile(	DBCatalog.getCatalog().tables.get(scanOp.fileName).attrs.size(), 
 												DBCatalog.getCatalog().inputPath + append + scanOp.fileName);
 		}
 	}

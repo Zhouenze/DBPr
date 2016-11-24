@@ -79,7 +79,7 @@ public final class DBPrPro2Main {
 		System.out.println();
 		
 		// Build index if needed.
-		if (DBCatalog.getCatalog().buildIndexes) {
+//		if (DBCatalog.getCatalog().buildIndexes) {
 			
 			// Clear previous indexes
 			String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/db/indexes/" : "\\db\\indexes\\");
@@ -116,10 +116,10 @@ public final class DBPrPro2Main {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+//		}
 		
 		// Evaluate queries if needed.
-		if (DBCatalog.getCatalog().evaluateQueries) {
+//		if (DBCatalog.getCatalog().evaluateQueries) {
 			try {
 				// Initialize a SqlParser.
 				CCJSqlParser sqlParser = new CCJSqlParser(new FileReader(DBCatalog.getCatalog().inputPath + "queries.sql"));
@@ -147,8 +147,8 @@ public final class DBPrPro2Main {
 						System.out.println("Run time of query " + (i - 1) + ": " + runtime + "\n");
 						
 						// Output human readable for debugging. Can be omitted.
-						phyPlan.root.reset();
-						phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "Readable"));
+//						phyPlan.root.reset();
+//						phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "Readable"));
 						
 						clearFolder(null);
 	
@@ -163,6 +163,6 @@ public final class DBPrPro2Main {
 			} catch (Exception e) {
 				System.err.println("Exception occurred with CCJSqlParser: " + e.toString());
 			}
-		}
+//		}
 	}
 }
