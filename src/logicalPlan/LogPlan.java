@@ -27,20 +27,30 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	
 	
 	
-	public Vector<Condition> joinConditions = new Vector<>();
-	public class pushedConditions {
-		String attrName;
-		Integer lowValue;
-		Integer highValue;
+	public Vector<Condition> joinConditions = new Vector<>();	// All the conditions on join operator.
+	public class PushedConditions {
+		public String attrName;
+		public Integer lowValue;			// attr >= lowValue. If not exist, set to Integer.MIN_VALUE
+		public Integer highValue;			// attr <= highValue. If not exist, set to Integer.MAX_VALUE
 	}
-	public class scan {
-		String fileName;
-		String alias;
-		Vector<pushedConditions> conditions = new Vector<>();
+	public class Scan {
+		public String fileName;
+		public String alias;
+		public Vector<PushedConditions> conditions = new Vector<>();	// This part is pushed conditions
+		public Vector<Condition> otherConditions = new Vector<>();		// This part is other conditions, including R.A < R.B, R.A <> 0, etc
+		
+		public int findIdOfPushedCond(String attrName) {
+			for (int i = 0; i < conditions.size(); ++i)
+				if (conditions.get(i).attrName.equals(attrName))
+					return i;
+			return -1;
+		}
 	}
-	public Vector<scan> joinChildren = new Vector<>();
-	public Vector<String> outputOrder = new Vector<>();
-	
+	public Vector<Scan> joinChildren = new Vector<>();			// Children of join represented by Scan, in output order (from A, B => joinChildren[0].fileName == A && joinChildren[1].fileName == B).
+	public HashMap<String, String> aliasDict = new HashMap<>();	// A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
+	public Vector<String> orderAttrs = null;					// Order by attributes, in full name. null means there is no order by operator.
+	public Vector<String> projAttrs = null;						// Projection attributes, in full name. null means select all.
+	public boolean hasDist = false;								// Whether there is a distinct operator.
 	
 	
 	
@@ -53,7 +63,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	public String query = "";									// Original query.
 	public Vector<Condition> conditions = new Vector<>();		// All the conditions in this query. Condition distribution will be postponed to physical plan 
 																// building for convenience of future optimization.
-	public HashMap<String, String> aliasDict = new HashMap<>();	// A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
 	public Vector<String> naiveJoinOrder = new Vector<>();		// For a naive plan, the order of scan is the same as input. This field will be deleted after 
 																// optimization project is done because then we will decide the order on our own.
 	

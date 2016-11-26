@@ -17,9 +17,20 @@ public final class PhyProjBfOp extends PhyProjOp {
 	@Override
 	public Tuple getNextTuple() {
 		Tuple childnext = child.getNextTuple();
-		if (childnext == null || selectAll) {
-			return childnext;
+		if (childnext == null) {
+			return null;
 		}
+		
+		if (selectAll) {
+			Tuple proj = new Tuple();
+			for (int i = 0; i < childnext.data.size(); ++i)
+				proj.data.add(0);
+			for (String attr : schema.keySet()) {
+				proj.data.set(schema.get(attr), childnext.data.get(child.schema.get(attr)));
+			}
+			return proj;
+		}
+		
 		// projection
 		// based on childnext's schema and projNames
 		Tuple proj = new Tuple();

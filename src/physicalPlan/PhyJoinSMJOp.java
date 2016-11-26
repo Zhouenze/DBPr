@@ -2,6 +2,7 @@ package physicalPlan;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Vector;
 
 import base.Condition;
 import base.DBCatalog;
@@ -29,6 +30,8 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 	private boolean over = false;		// Whether the output is over.
 	private boolean init = true;		// Whether it's the first getNextTuple operation. This is needed to do some initialization.
 	
+	public Vector<Condition> extraConditions = new Vector<>();
+	
 	/*
 	 * Constructor of this operator
 	 */
@@ -38,14 +41,25 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 		++count;
 	}
 	
+	@Override
+	public Tuple getNextTuple() {
+		Tuple res;
+		while ((res = innerGetNextTuple()) != null) {
+			for (Condition cond : extraConditions)
+				if (!cond.test(res, schema))
+					continue;
+			return res;
+		}
+		return null;
+	}
+	
 
 	/*
 	 * Method that returns next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
 	 */
-	@Override
-	public Tuple getNextTuple() {
+	public Tuple innerGetNextTuple() {
 		
 		if (over)
 			return null;

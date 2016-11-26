@@ -1,6 +1,7 @@
 package physicalPlan;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.HashMap;
 
 import base.Condition;
 import base.DBCatalog;
@@ -203,7 +204,7 @@ public final class PhyPlan implements LogOpVisitor {
 		String alias = logPlan.naiveJoinOrder.remove(logPlan.naiveJoinOrder.size() - 1);
 		String fileName = logPlan.aliasDict.get(alias);
 		if (scanType == 1 && !DBCatalog.getCatalog().tables.get(fileName).indexes.isEmpty()) {
-			scanOp = new PhyScanIndexOp(fileName, alias);         
+			scanOp = new PhyScanIndexOp(fileName, alias, null);
 		} else {
 			scanOp = new PhyScanBfOp();
 			scanOp.alias = alias;
@@ -347,8 +348,127 @@ public final class PhyPlan implements LogOpVisitor {
 		} else if (op instanceof PhyScanBfOp) {
 			return;
 		} else if (op instanceof PhyScanIndexOp) {
-			((PhyScanIndexOp) op).initialize();
+			((PhyScanIndexOp) op).initialize(null);
 		}
 		return;
+	}
+	
+	private void buildOptimized() {
+		PhyOp dataRoot;
+		
+		PhyPlanOptimizer optimize = new PhyPlanOptimizer(logPlan);
+		if (optimize.finalJoinOrder == null) {
+			LogPlan.Scan scan = logPlan.joinChildren.get(0);
+			PhyPlanOptimizer.ScanInfo scanInfo = optimize.scanPlan.get(scan.alias);
+			dataRoot = buildOptimizedScan(scan, scanInfo);
+		} else {
+			LogPlan.Scan scan = logPlan.joinChildren.get(optimize.finalJoinOrder.get(0));
+			PhyPlanOptimizer.ScanInfo scanInfo = optimize.scanPlan.get(scan.alias);
+			PhyCondOp leftTree = buildOptimizedScan(scan, scanInfo);
+			PhyScanOp rightTree;
+			
+			for (int i = 0; i < optimize.finalJoinType.size(); ++i) {
+				scan = logPlan.joinChildren.get(optimize.finalJoinOrder.get(i + 1));
+				scanInfo = optimize.scanPlan.get(scan.alias);
+				rightTree = buildOptimizedScan(scan, scanInfo);
+				
+				PhyJoinOp join;
+				switch (optimize.finalJoinType.get(i)) {
+				case 1:
+					String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/" : "db\\data\\");
+					join = new PhyJoinBNLJOp(joinBuffer, 	DBCatalog.getCatalog().tables.get(rightTree.fileName).attrs.size(),
+															DBCatalog.getCatalog().inputPath + append + rightTree.fileName);
+					join.conditions = optimize.finalJoinCond.get(i);
+					join.child = leftTree;
+					join.rChild = rightTree;
+					leftTree = join;
+					break;
+				case 2:
+					join = new PhyJoinSMJOp();
+					PhySortOp lSort = new PhySortExOp(sortBuffer);
+					PhySortOp rSort = new PhySortExOp(sortBuffer);
+					
+					for (Condition cond : optimize.finalJoinCond.get(i)) {
+						if (cond.operator == Condition.op.e) {
+							join.conditions.add(cond);
+							if (!lSort.sortAttrs.contains(cond.leftName))
+								lSort.sortAttrs.add(cond.leftName);
+							if (!rSort.sortAttrs.contains(cond.rightName))
+								rSort.sortAttrs.add(cond.rightName);
+						} else {
+							((PhyJoinSMJOp)join).extraConditions.add(cond);
+						}
+					}
+					
+					lSort.child = leftTree;
+					rSort.child = rightTree;
+					join.child = lSort;
+					join.rChild = rSort;
+					leftTree = join;
+					break;
+				default:
+					break;
+				}
+			}
+			dataRoot = leftTree;
+		}
+		
+		PhyProjOp projOp = new PhyProjBfOp();
+		if (logPlan.projAttrs == null) {
+			projOp.selectAll = true;
+		} else {
+			projOp.selectAll = false;
+			projOp.projAttrs = logPlan.projAttrs;
+		}
+		projOp.child = dataRoot;
+		projOp.buildSchema();
+		root = projOp;
+		
+		
+		if (projOp.selectAll) {
+			projOp.schema = new HashMap<>();
+			int count = 0;
+			for (LogPlan.Scan scan : logPlan.joinChildren) {
+				DBCatalog.RelationInfo relationInfo = DBCatalog.getCatalog().tables.get(scan.fileName);
+				for (DBCatalog.AttrInfo attrInfo : relationInfo.attrs)
+					projOp.schema.put(scan.alias + '.' + attrInfo.name, count++);
+			}
+		}
+		
+		
+		if (logPlan.orderAttrs != null || logPlan.hasDist) {
+			PhySortOp orderOp = new PhySortExOp(sortBuffer);
+			if (logPlan.orderAttrs != null)
+				orderOp.sortAttrs = logPlan.orderAttrs;
+			orderOp.schema = root.schema;
+			orderOp.child = root;
+			root = orderOp;
+		}
+		
+		if (logPlan.hasDist) {
+			PhyDistOp distOp = new PhyDistBfOp();
+			distOp.hasOrderby = true;
+			distOp.schema = root.schema;
+			distOp.child = root;
+			root = distOp;
+		}
+	}
+	
+	private PhyScanOp buildOptimizedScan(LogPlan.Scan scan, PhyPlanOptimizer.ScanInfo scanInfo) {
+		if (scanInfo.type == 0) {
+			PhyScanBfOp scanOp = new PhyScanBfOp();
+			scanOp.alias = scan.alias;
+			scanOp.fileName = scan.fileName;
+			for (LogPlan.PushedConditions cond : scan.conditions) {
+				scanOp.conditions.add(new Condition(scan.alias + '.' + cond.attrName + " <= " + cond.highValue));
+				scanOp.conditions.add(new Condition(scan.alias + '.' + cond.attrName + " >= " + cond.lowValue));
+			}
+			scanOp.conditions.addAll(scan.otherConditions);
+			return scanOp;
+		} else {
+			PhyScanIndexOp scanOp = new PhyScanIndexOp(scanInfo.fileName, scan.alias, scanInfo.keyName);
+			scanOp.initialize(scan);
+			return scanOp;
+		}
 	}
 }

@@ -10,6 +10,7 @@ import base.Condition;
 import base.DBCatalog;
 import base.Tuple;
 import base.TupleReader;
+import logicalPlan.LogPlan;
 
 /*
  * This class is index scan operator.
@@ -51,13 +52,19 @@ public class PhyScanIndexOp extends PhyScanOp {
 	 * 		fileName: file being scanned by this index scan operator.
 	 * 		alias: alias of this operator in query.
 	 */
-	public PhyScanIndexOp(String fileName, String alias) {
+	public PhyScanIndexOp(String fileName, String alias, String keyNameP) {
 		super();
 		this.fileName = fileName;
 		this.alias = alias;
-		keyName = DBCatalog.getCatalog().tables.get(fileName).indexes.get(0).keyName;
+		
+		if (keyNameP != null) {
+			keyName = keyNameP;
+			clustered = (DBCatalog.getCatalog().tables.get(fileName).findIndexOfKey(keyName).clustered == 1);
+		} else {
+			keyName = DBCatalog.getCatalog().tables.get(fileName).indexes.get(0).keyName;
+			clustered = (DBCatalog.getCatalog().tables.get(fileName).indexes.get(0).clustered == 1);
+		}
 		keyId = DBCatalog.getCatalog().tables.get(fileName).findIdOfAttr(keyName);
-		clustered = (DBCatalog.getCatalog().tables.get(fileName).indexes.get(0).clustered == 1);
 		String append = DBCatalog.getCatalog().inputPath.contains("/") ? "db/indexes/" : "db\\indexes\\";
 		indexPath = DBCatalog.getCatalog().inputPath + append + fileName + "." + keyName;
 		
@@ -93,7 +100,28 @@ public class PhyScanIndexOp extends PhyScanOp {
 	 * @return
 	 * 		whether there is a valid rid according to index.
 	 */
-	public boolean initialize() {
+	public boolean initialize(LogPlan.Scan scan) {
+		if (scan != null) {
+			for (LogPlan.PushedConditions cond : scan.conditions) {
+				if (cond.attrName.equals(keyName)) {
+					lowKey = cond.lowValue;
+					highKey = cond.highValue;
+				} else {
+					conditions.add(new Condition(scan.alias + '.' + cond.attrName + " <= " + cond.highValue));
+					conditions.add(new Condition(scan.alias + '.' + cond.attrName + " >= " + cond.lowValue));
+				}
+			}
+			conditions.addAll(scan.otherConditions);
+			validConditions = new boolean [conditions.size()];
+			for (int i = 0; i < conditions.size(); ++i)
+				validConditions[i] = true;
+			return seekToFirstRid();
+		}
+		
+		
+		
+		
+		
 		validConditions = new boolean [conditions.size()];
 		
 		// If a condition has one element and a constant, constant is on the right. This is handled by constructor of Condition.

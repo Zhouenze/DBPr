@@ -19,9 +19,7 @@ public abstract class PhyProjOp extends PhyOp {
 	public void buildSchema() {
 		child.buildSchema();
 		if (selectAll) {
-			for (String name : child.schema.keySet()) {
-				schema.put(name, child.schema.get(name));
-			}
+			schema = child.schema;
 		} else {
 			for (int i = 0; i < projAttrs.size(); ++i) {
 				schema.put(projAttrs.get(i), i);

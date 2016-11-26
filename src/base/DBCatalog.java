@@ -47,7 +47,14 @@ public final class DBCatalog {
 			for (int i = 0; i < attrs.size(); ++i)
 				if (attrName.equals(attrs.get(i).name))
 					return i;
-			return 0;
+			return -1;
+		}
+		
+		public IndexInfo findIndexOfKey(String keyName) {
+			for (IndexInfo index : indexes)
+				if (index.keyName.equals(keyName))
+					return index;
+			return null;
 		}
 	}
 	
