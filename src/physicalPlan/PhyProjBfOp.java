@@ -21,7 +21,7 @@ public final class PhyProjBfOp extends PhyProjOp {
 			return null;
 		}
 		
-		if (selectAll) {
+		if (selectAll) {				// If select all, projection operator is responsible for changing order
 			Tuple proj = new Tuple();
 			for (int i = 0; i < childnext.data.size(); ++i)
 				proj.data.add(0);

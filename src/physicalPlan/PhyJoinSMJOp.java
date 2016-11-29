@@ -30,7 +30,7 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 	private boolean over = false;		// Whether the output is over.
 	private boolean init = true;		// Whether it's the first getNextTuple operation. This is needed to do some initialization.
 	
-	public Vector<Condition> extraConditions = new Vector<>();
+	public Vector<Condition> extraConditions = new Vector<>();		// Conditions whose operator is not =
 	
 	/*
 	 * Constructor of this operator
@@ -41,23 +41,35 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 		++count;
 	}
 	
+	/*
+	 * Method that returns next tuple in the output of this operator.
+	 * Call innerGetNextTuple to get tuples that satisfy equality conditions
+	 * until find one that also satisfies other conditions.
+	 * In one word: use this wrapper to test extra conditions.
+	 * @see physicalPlan.PhyOp#getNextTuple()
+	 * @return
+	 * 		next tuple in output of this operator.
+	 */
 	@Override
 	public Tuple getNextTuple() {
 		Tuple res;
 		while ((res = innerGetNextTuple()) != null) {
+			boolean statisfy = true;
 			for (Condition cond : extraConditions)
-				if (!cond.test(res, schema))
-					continue;
-			return res;
+				if (!cond.test(res, schema)) {
+					statisfy = false;
+					break;
+				}
+			if (statisfy)
+				return res;
 		}
 		return null;
 	}
 	
 
 	/*
-	 * Method that returns next tuple in the output of this node.
-	 * @override from super class Operator
-	 * @return next tuple in the output of this node.
+	 * Method that returns next tuple that satisfies equality conditions.
+	 * @return next tuple that satisfies equality conditions.
 	 */
 	public Tuple innerGetNextTuple() {
 		

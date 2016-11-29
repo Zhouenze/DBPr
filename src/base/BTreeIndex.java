@@ -18,7 +18,7 @@ public class BTreeIndex {
 	
 	private boolean clusteredOnKey;			// Whether the index is clustered on key. Optimization can be applied if so.
 	private String fileName;
-	private String keyName;
+	private String keyName;					// Part name.
 	private int keyId;						// Index of the key.
 	private int order;						// Order of this B+ tree.
 	
@@ -33,7 +33,7 @@ public class BTreeIndex {
 	 * Constructor, also the main workload.
 	 * @param
 	 * 		fileName: the file whose index is being built.
-	 * 		keyName: the key of the index.
+	 * 		keyName: the key of the index, part name.
 	 * 		clusteredOnKey: whether the file is clustered on key.
 	 * 		order: the order of the tree.
 	 */

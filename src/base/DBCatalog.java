@@ -15,21 +15,42 @@ import java.util.Vector;
  */
 public final class DBCatalog {
 	
+	/*
+	 * Info class for an index, contains part name of key and if it's clustered or not.
+	 * Objects will belong to a relation so no filename needed.
+	 */
 	public class IndexInfo {
-		public String keyName;
+		public String keyName;			// Part name.
 		public Integer clustered;
+		public Integer leafNum;			// Not set when construction. Will be set when used and later can accelerate process.
 		
+		/*
+		 * Constructor of index info class.
+		 * @param
+		 * 		keyName: name of key.
+		 * 		clustered: if the index is clustered.
+		 */
 		public IndexInfo(String keyName, String clustered) {
 			this.keyName = keyName;
 			this.clustered = Integer.valueOf(clustered);
+			leafNum = -1;
 		}
 	}
 	
+	/*
+	 * Info class for attributes.
+	 * Objects will belong to a relation so no filename needed.
+	 */
 	public class AttrInfo {
-		public String name;
-		public Integer highValue;
-		public Integer lowValue;
+		public String name;				// Part name.
+		public Integer highValue;		// Largest value according to statistics.
+		public Integer lowValue;		// Smallest value according to statistics.
 		
+		/*
+		 * Constructor.
+		 * @param
+		 * 		attrInfo: string containing information of this attribute, like "G,0,5000"
+		 */
 		public AttrInfo(String attrInfo) {
 			String [] attrInfoSplit = attrInfo.split(",");
 			name = attrInfoSplit[0];
@@ -38,18 +59,43 @@ public final class DBCatalog {
 		}
 	}
 	
+	/*
+	 * Info class of a relation.
+	 */
 	public class RelationInfo {
 		public Integer tupleNum;
 		public Vector<AttrInfo> attrs = new Vector<>();
 		public Vector<IndexInfo> indexes = new Vector<>();
 		
+		/*
+		 * Function to get an attribute with particular part name.
+		 * @param
+		 * 		attrName: part name of the attribute.
+		 */
+		public AttrInfo findAttr(String attrName) {
+			for (AttrInfo attrInfo : attrs)
+				if (attrInfo.name.equals(attrName))
+					return attrInfo;
+			return null;
+		}
+		
+		/*
+		 * Get attribute index.
+		 * @param
+		 * 		attrName: part name of the attribute.
+		 */
 		public int findIdOfAttr(String attrName) {
 			for (int i = 0; i < attrs.size(); ++i)
-				if (attrName.equals(attrs.get(i).name))
+				if (attrs.get(i).name.equals(attrName))
 					return i;
 			return -1;
 		}
 		
+		/*
+		 * Get index with keyName
+		 * @param
+		 * 		keyName: part key name of the index.
+		 */
 		public IndexInfo findIndexOfKey(String keyName) {
 			for (IndexInfo index : indexes)
 				if (index.keyName.equals(keyName))
@@ -58,7 +104,7 @@ public final class DBCatalog {
 		}
 	}
 	
-	public HashMap<String, RelationInfo> tables = null;
+	public HashMap<String, RelationInfo> tables = null;		// Map file names to information of that relation.
 	
 	
 	

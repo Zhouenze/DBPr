@@ -11,38 +11,63 @@ import java.util.Vector;
 import base.Condition;
 import base.DBCatalog;
 import logicalPlan.LogPlan;
+import net.sf.jsqlparser.statement.select.Union;
 
+
+/*
+ * This class is used to optimize a query evaluation plan.
+ * 
+ * @author Enze Zhou, ez242
+ */
 public class PhyPlanOptimizer {
 	
-	private LogPlan logPlan = null;
+	private LogPlan logPlan = null;		// Logical plan that is being optimized.
 	
+	/*
+	 * This class contains how to configure a scan operator in optimized plan.
+	 */
 	public class ScanInfo {
 		public String fileName;
-		public Integer type;
-		public String keyName;
+		public Integer type;			// 0: full scan. 1: index scan.
+		public String keyName;			// if index scan, key name is here. part name.
 		
+		/*
+		 * Constructor of a ScanInfo object.
+		 * @param
+		 * 		fileName: file name of file being scanned.
+		 * 		type: see above.
+		 * 		keyName: see above.
+		 */
 		public ScanInfo(String fileName, Integer type, String keyName) {
 			this.fileName = fileName;
 			this.type = type;
 			this.keyName = keyName;
 		}
 	}
-	public HashMap<String, ScanInfo> scanPlan = null;
+	public HashMap<String, ScanInfo> finalScanPlan = null;			// Map an alias to a ScanInfo object. Use this to configure physical plan.
 	
 	
+	/*
+	 * Intermediate join order for dynamic programming usage.
+	 */
 	private class JoinOrder {
-		HashMap<String, Integer> vValueDict = new HashMap<>();
-		Vector<Integer> joinOrder = new Vector<>();
-		Integer size;
-		Integer cost;
+		HashMap<String, Integer> vValueDict = new HashMap<>();		// V-value dictionary of this operator.
+		Vector<Integer> joinOrder = new Vector<>();					// Order of join represented by index in logPlan.joinChildren.
+		Integer size;				// Output size of this join operator.
+		Integer cost;				// Cost of this sub-join-plan.
 	}
 	
 	
-	public Vector<Integer> finalJoinOrder = null;
-	public Vector<Integer> finalJoinType = null;
-	public Vector<Vector<Condition>> finalJoinCond = null;
+	public Vector<Integer> finalJoinOrder = null;					// If null: only one relation.
+	public Vector<Integer> finalJoinType = null;					// 1: BNLJ. 2: SMJ. If null: only one relation.
+	public Vector<Vector<Condition>> finalJoinCond = null;			// Conditions distributed to each join operator.
 	
 	
+	/*
+	 * Constructor of optimizer, also main entrance of code.
+	 * @param
+	 * 		logPlan: the logical plan that is being optimized.
+	 */
 	public PhyPlanOptimizer(LogPlan logPlan) {
 		this.logPlan = logPlan;
 		
@@ -54,23 +79,28 @@ public class PhyPlanOptimizer {
 		}
 	}
 
+	/*
+	 * This function plans scan type of every scan.
+	 */
 	private void planScanType() {
-		scanPlan = new HashMap<>();
+		finalScanPlan = new HashMap<>();
 		
 		for (LogPlan.Scan scan : logPlan.joinChildren) {
 			DBCatalog.RelationInfo relationInfo = DBCatalog.getCatalog().tables.get(scan.fileName);
-			Integer totalPage = (int) Math.ceil(relationInfo.tupleNum * relationInfo.attrs.size() / 1024.0);
+			Integer totalPage = (int) Math.ceil(relationInfo.tupleNum * relationInfo.attrs.size() * 4.0 / DBCatalog.getCatalog().pageSize);
 			
-			Integer type = 0;
+			Integer type = 0;				// Basic case: full scan.
 			String keyName = null;
 			Integer minCost = totalPage;
 			
+			// See if using an index could be better.
 			for (DBCatalog.IndexInfo index : relationInfo.indexes) {
-				DBCatalog.AttrInfo attr = relationInfo.attrs.get(relationInfo.findIdOfAttr(index.keyName));
-				int pushedCondId = scan.findIdOfPushedCond(index.keyName);
-				if (pushedCondId < 0)
+				DBCatalog.AttrInfo attr = relationInfo.findAttr(index.keyName);
+				LogPlan.HighLowCondition cond = scan.conditions.get(scan.alias + '.' + index.keyName);
+				
+				// If no restriction on this index key, it is strictly worse than full scan so should not be considered.
+				if (cond == null)
 					continue;
-				LogPlan.PushedConditions cond = scan.conditions.get(pushedCondId);
 				
 				double red = 1.0 * (Math.min(attr.highValue, cond.highValue) - Math.max(attr.lowValue, cond.lowValue) + 1) / (attr.highValue - attr.lowValue + 1);
 				Integer cost;
@@ -80,24 +110,27 @@ public class PhyPlanOptimizer {
 				} else {
 					cost = (int) (3 + relationInfo.tupleNum * red);
 					
-					String append = DBCatalog.getCatalog().inputPath.contains("/") ? "db/indexes/" : "db\\indexes\\";
-					String indexPath = DBCatalog.getCatalog().inputPath + append + scan.fileName + "." + index.keyName;
-					
-					try {
-						RandomAccessFile indexFile = new RandomAccessFile(indexPath, "r");
-						FileChannel indexFC = indexFile.getChannel();
-						ByteBuffer BB = ByteBuffer.allocate(DBCatalog.getCatalog().pageSize);
+					// Add leaves read to cost. If leaf count not available in DBCatalog, get it.
+					if (index.leafNum == -1) {
+						String append = DBCatalog.getCatalog().inputPath.contains("/") ? "db/indexes/" : "db\\indexes\\";
+						String indexPath = DBCatalog.getCatalog().inputPath + append + scan.fileName + "." + index.keyName;
 						
-						// Read header information.
-						indexFC.read(BB);
-						BB.flip();
-						cost += (int) (BB.getInt(4) * red);
-						
-						indexFC.close();
-						indexFile.close();
-					} catch (Exception e) {
-						e.printStackTrace();
+						try {
+							RandomAccessFile indexFile = new RandomAccessFile(indexPath, "r");
+							FileChannel indexFC = indexFile.getChannel();
+							ByteBuffer BB = ByteBuffer.allocate(DBCatalog.getCatalog().pageSize);
+							
+							indexFC.read(BB);
+							BB.flip();
+							index.leafNum = BB.getInt(4);
+							
+							indexFC.close();
+							indexFile.close();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
+					cost += (int) (index.leafNum * red);
 				}
 				
 				if (cost < minCost) {
@@ -106,26 +139,41 @@ public class PhyPlanOptimizer {
 					minCost = cost;
 				}
 			}
-			scanPlan.put(scan.alias, new ScanInfo(scan.fileName, type, keyName));
+			
+			// Record this plan for scan.
+			finalScanPlan.put(scan.alias, new ScanInfo(scan.fileName, type, keyName));
 		}
 	}
 	
+	/*
+	 * In this project, a set of relations in the plan is represented by a 01 string, s[i] == 1 means logPlan.joinChildren[i] is in this plan.
+	 * This class is used to iterate from small subsets to big ones.
+	 */
 	private class SetStringGenerator {
-		Vector<String> setStrings = new Vector<>();
-		int traverse = 0;
+		private Vector<String> setStrings = new Vector<>();			// All the set strings are generated and stored
+															// when constructing this object, later we will get them one by one.
+		private int traverse = 0;									// Next string to give.
 		
+		/*
+		 * Constructor of this class, generate every string in advance.
+		 * @param
+		 * 		setSize: number of scans.
+		 */
 		public SetStringGenerator(int setSize) {
 			char [] setStringArray = new char [setSize];
 			for (int i = 0; i < setSize; ++i)
 				setStringArray[i] = '0';
 			
-			HashSet<String> gotStrings = new HashSet<>();
+			HashSet<String> gotStrings = new HashSet<>();	// Strings that have already be generated.
+															// The process below can generate repeatedly so use this to show.
 			String tempString = setStringArray.toString();
 			gotStrings.add(tempString);
 			setStrings.add(tempString);
 			
 			int i = 0;
-			while (i < setStrings.size()) {
+			while (i < setStrings.size()) {					// Iterate on the queue until it no longer appends.
+				
+				// Pick i and generate new ones by modifying one of it's 0s
 				setStringArray = setStrings.get(i).toCharArray();
 				for (int j = 0; j < setStringArray.length; ++j) {
 					if (setStringArray[j] == '1')
@@ -142,6 +190,11 @@ public class PhyPlanOptimizer {
 			}
 		}
 		
+		/*
+		 * This function return strings one by one.
+		 * @return
+		 * 		Next set string, from "000..." to ones with 1 element and so on.
+		 */
 		public String getNextString() {
 			if (traverse < setStrings.size())
 				return setStrings.get(traverse++);
@@ -150,17 +203,30 @@ public class PhyPlanOptimizer {
 		}
 	}
 	
-	private SetStringGenerator mySetStringGenerator = null;
-	
+	/*
+	 * This class generates set string with only one element, because we need to pick plans for single element set from time to time.
+	 */
 	private class UniSetStringGenerator {
-		char [] uniSetStringCharArray = null;
+		private char [] uniSetStringCharArray = null;	// All 0. Change one of it to get target string.
 		
+		/*
+		 * Constructor.
+		 * @param
+		 * 		setSize: number of scans.
+		 */
 		public UniSetStringGenerator(int setSize) {
 			uniSetStringCharArray = new char [setSize];
-			for (int i = 0; i < setSize; ++i)
+			for (int i = 0; i < uniSetStringCharArray.length; ++i)
 				uniSetStringCharArray[i] = '0';
 		}
 		
+		/*
+		 * This function get the set string with only i as the element.
+		 * @param
+		 * 		The single element in this set.
+		 * @return
+		 * 		Set string with only i in this set, for example, 1 -> "01000..."
+		 */
 		public String getUniSetString(int i) {
 			uniSetStringCharArray[i] = '1';
 			String res = uniSetStringCharArray.toString();
@@ -169,99 +235,172 @@ public class PhyPlanOptimizer {
 		}
 	}
 	
-	private UniSetStringGenerator myUniSetStringGenerator = null;
-	
+	/*
+	 * This function plans join order with dynamic programming.
+	 */
 	private void planJoinOrder() {
-		HashMap<String, JoinOrder> planMap = new HashMap<>();
-		
-		mySetStringGenerator = new SetStringGenerator(logPlan.joinChildren.size());
-		myUniSetStringGenerator = new UniSetStringGenerator(logPlan.joinChildren.size());
-		
-		char [] relationSetArray = mySetStringGenerator.getNextString().toCharArray();
-		
-		for (int i = 0; i < relationSetArray.length; ++i) {
-			relationSetArray[i] = '1';
-			
-			LogPlan.Scan scan = logPlan.joinChildren.get(i);
-			DBCatalog.RelationInfo relation = DBCatalog.getCatalog().tables.get(scan.fileName);
-			
-			JoinOrder joinOrder = new JoinOrder();
-			joinOrder.joinOrder.add(i);
-			joinOrder.cost = 0;
-			
-			double tempSize = relation.tupleNum;
-			for (DBCatalog.AttrInfo attrInfo : relation.attrs) {
-				int pushedCondId = scan.findIdOfPushedCond(attrInfo.name);
-				LogPlan.PushedConditions condition = null;
-				if (pushedCondId >= 0)
-					condition = scan.conditions.get(pushedCondId);
-				int vValue = attrInfo.highValue - attrInfo.lowValue + 1;
-				if (condition != null) {
-					vValue = Math.min(vValue, Math.min(attrInfo.highValue, condition.highValue) - Math.max(attrInfo.lowValue, condition.lowValue) + 1);
-					tempSize *= ((Math.min(attrInfo.highValue, condition.highValue) - Math.max(attrInfo.lowValue, condition.lowValue)) * 1.0 / (attrInfo.highValue - attrInfo.lowValue));
-				}
-				joinOrder.vValueDict.put(scan.alias + '.' + attrInfo.name, vValue);
-			}
-			joinOrder.size = Math.max((int) Math.ceil(tempSize), 1);
-			for (DBCatalog.AttrInfo attrInfo : relation.attrs) {
-				joinOrder.vValueDict.replace(attrInfo.name, Math.min(joinOrder.vValueDict.get(attrInfo.name), joinOrder.size));
-			}
-			
-			planMap.put(relationSetArray.toString(), joinOrder);
-			relationSetArray[i] = '0';
-		}
-		
-		String relationSetString = null;
-		while ((relationSetString = mySetStringGenerator.getNextString()) != null) {
-			relationSetArray = relationSetString.toCharArray();
-			JoinOrder leftPlan = planMap.get(relationSetArray.toString());
-			
-			for (int i = 0; i < relationSetArray.length; ++i) {
-				if (relationSetArray[i] == '1')
-					continue;
-				relationSetArray[i] = '1';
-				
-				Integer cost = (leftPlan.joinOrder.size() < 2 ? 0 : leftPlan.cost + leftPlan.size);
-				if (planMap.containsKey(relationSetArray.toString()) && planMap.get(relationSetArray.toString()).cost <= cost) {
-					relationSetArray[i] = '0';
-					continue;
-				}
-				JoinOrder plan = new JoinOrder();
-				plan.cost = cost;
-				
-				for (Integer rela : leftPlan.joinOrder)
-					plan.joinOrder.add(rela);
-				plan.joinOrder.add(i);
-				
-				JoinOrder rightPlan = planMap.get(myUniSetStringGenerator.getUniSetString(i));
-				for (String attr : leftPlan.vValueDict.keySet())
-					plan.vValueDict.put(attr, leftPlan.vValueDict.get(attr));
-				for (String attr : rightPlan.vValueDict.keySet())
-					plan.vValueDict.put(attr, rightPlan.vValueDict.get(attr));
-				
-				
-				
-				
-				planMap.put(relationSetArray.toString(), plan);
-				relationSetArray[i] = '0';
-			}
-		}
-		
-		
-		
-		
+//		
+//		// Each set represented by a 01 string is mapped to a joinorder, which is the best plan so far for it.
+//		HashMap<String, JoinOrder> planMap = new HashMap<>();
+//		
+//		SetStringGenerator mySetStringGenerator = new SetStringGenerator(logPlan.joinChildren.size());
+//		UniSetStringGenerator myUniSetStringGenerator = new UniSetStringGenerator(logPlan.joinChildren.size());
+//		
+//		// The first set string is "000..."
+//		char [] relationSetArray = mySetStringGenerator.getNextString().toCharArray();
+//		
+//		// Get all the one-relation plan.
+//		for (int i = 0; i < relationSetArray.length; ++i) {
+//			relationSetArray[i] = '1';
+//			
+//			LogPlan.Scan scan = logPlan.joinChildren.get(i);
+//			DBCatalog.RelationInfo relation = DBCatalog.getCatalog().tables.get(scan.fileName);
+//			
+//			JoinOrder plan = new JoinOrder();
+//			plan.joinOrder.add(i);
+//			plan.cost = 0;
+//			
+//			double tempSize = relation.tupleNum;
+//			for (DBCatalog.AttrInfo attrInfo : relation.attrs) {
+//				LogPlan.HighLowCondition condition = scan.conditions.get(scan.alias + '.' + attrInfo.name);
+//				int vValue = attrInfo.highValue - attrInfo.lowValue + 1;
+//				
+//				// If there is restriction on this attribute, it's vValue and estimated output size will shrink.
+//				if (condition != null) {
+//					vValue = Math.min(attrInfo.highValue, condition.highValue) - Math.max(attrInfo.lowValue, condition.lowValue) + 1;
+//					tempSize *= (vValue * 1.0 / (attrInfo.highValue - attrInfo.lowValue + 1));
+//				}
+//				
+//				plan.vValueDict.put(scan.alias + '.' + attrInfo.name, vValue);
+//			}
+//			
+//			// If size < 1, it should be 1.
+//			plan.size = Math.max((int) Math.ceil(tempSize), 1);
+//			
+//			// No v-value should be higher than size.
+//			for (DBCatalog.AttrInfo attrInfo : relation.attrs)
+//				plan.vValueDict.replace(	scan.alias + '.' + attrInfo.name,
+//											Math.min(plan.vValueDict.get(scan.alias + '.' + attrInfo.name), plan.size));
+//			
+//			planMap.put(relationSetArray.toString(), plan);
+//			relationSetArray[i] = '0';
+//		}
+//		
+//		// Get small sub-plan one by one and build bigger plans by adding one relation to it.
+//		String relationSetString = null;
+//		JoinOrder leftPlan;
+//		while ((relationSetString = mySetStringGenerator.getNextString()) != null) {		// When get null, full optimal plan is achieved.
+//			relationSetArray = relationSetString.toCharArray();
+//			
+//			// Building new plans by adding one relation to this sub-plan.
+//			leftPlan = planMap.get(relationSetArray.toString());
+//			
+//			for (int i = 0; i < relationSetArray.length; ++i) {
+//				if (relationSetArray[i] == '1')		// This relation is already in left sub-plan.
+//					continue;
+//				
+//				relationSetArray[i] = '1';			// Otherwise try adding ith relation to plan.
+//				
+//				Integer cost = (leftPlan.joinOrder.size() < 2 ? 0 : leftPlan.cost + leftPlan.size);
+//				
+//				// If a better plan already exists in planMap, continue.
+//				if (planMap.containsKey(relationSetArray.toString()) && planMap.get(relationSetArray.toString()).cost <= cost) {
+//					relationSetArray[i] = '0';
+//					continue;
+//				}
+//				
+//				// Start building new plan
+//				JoinOrder plan = new JoinOrder();
+//				plan.cost = cost;
+//				
+//				// sub-plan for ith relation
+//				JoinOrder rightPlan = planMap.get(myUniSetStringGenerator.getUniSetString(i));
+//				
+//				// If two relations, left should be smaller. Putting the right plan in planMap
+//				// from the very beginning because later the plan with same cost will be omitted.
+//				if (leftPlan.joinOrder.size() < 2 && leftPlan.size > rightPlan.size) {
+//					plan.joinOrder.add(i);
+//					plan.joinOrder.add(leftPlan.joinOrder.get(0));
+//				} else {
+//					for (Integer rela : leftPlan.joinOrder)
+//						plan.joinOrder.add(rela);
+//					plan.joinOrder.add(i);
+//				}
+//				
+//				// Put in original v-values from sub-plans.
+//				plan.vValueDict.putAll(leftPlan.vValueDict);
+//				plan.vValueDict.putAll(rightPlan.vValueDict);
+//				
+//				Union attrUnion;
+//				
+//				// Get maximum vValue of each union set elements.
+//				HashMap<Union, Integer> vValueOfUnion = new HashMap<>();
+//				for (Condition cond : logPlan.joinConditions) {
+//					
+//					// Non-equal conditions are neglected.
+//					if (plan.vValueDict.containsKey(cond.leftName) && plan.vValueDict.containsKey(cond.rightName) && cond.operator == Condition.op.e) {
+//						attrUnion = UnionFind(cond.leftName);			// leftName and rightName should be in the same union.
+//						if (!vValueOfUnion.containsKey(attrUnion)) {
+//							vValueOfUnion.put(attrUnion, Math.max(plan.vValueDict.get(cond.leftName), plan.vValueDict.get(cond.rightName)));
+//						} else {
+//							Integer condMaxV = Math.max(plan.vValueDict.get(cond.leftName), plan.vValueDict.get(cond.rightName));
+//							vValueOfUnion.replace(attrUnion, Math.max(vValueOfUnion.get(attrUnion), condMaxV));
+//						}
+//					}
+//				}
+//				
+//				// Join size is cross product divided by vValue of each union.
+//				double joinSize = leftPlan.size * rightPlan.size;
+//				for (Integer unionV : vValueOfUnion.values())
+//					joinSize /= unionV;
+//				plan.size = joinSize > 1 ? (int) Math.ceil(joinSize) : 1;	// Join size will be >= 1
+//				
+//				// Get minimum vValue of each union.
+//				vValueOfUnion.clear();
+//				for (String attrName : plan.vValueDict.keySet()) {
+//					attrUnion = UnionFind(attrName);
+//					if (vValueOfUnion.containsKey(attrUnion)) {
+//						vValueOfUnion.replace(attrUnion, Math.min(vValueOfUnion.get(attrUnion), plan.vValueDict.get(attrName)));
+//					} else {
+//						vValueOfUnion.put(attrUnion, plan.vValueDict.get(attrName));
+//					}
+//				}
+//				
+//				// Update vValueDict to set every variable of same union to same vValue
+//				for (String attrName : plan.vValueDict.keySet()) {
+//					attrUnion = UnionFind(attrName);
+//					
+//					// vValue should not be bigger than output size but should neither be smaller than 1.
+//					Integer vValue = Math.min(plan.size, vValueOfUnion.get(attrUnion));
+//					plan.vValueDict.replace(attrName, Math.max(1, vValue));
+//				}
+//				
+//				/*
+//				 * Join size is calculated using vValues of children, vValue of join is minimum of children vValues.
+//				 * Only consider attributed that appear in this join operator, others that will be joined later will not be considered even though they are in the same union.
+//				 */
+//				
+//				planMap.put(relationSetArray.toString(), plan);
+//				relationSetArray[i] = '0';
+//			}
+//		}
+//		
+//		// In the last iteration, leftPlan will be the plan for whole set.
+//		finalJoinOrder = leftPlan.joinOrder;
 	}
 	
+	/*
+	 * This function plans join type of every join and get join conditions by the way.
+	 */
 	private void planJoinType() {
 		finalJoinCond = new Vector<>();
 		finalJoinType = new Vector<>();
 		
-		HashSet<String> leftAttrs = new HashSet<>();
-		LogPlan.Scan scan = logPlan.joinChildren.get(finalJoinOrder.get(0));
+		HashSet<String> leftAttrs = new HashSet<>();							// Attributes that in left sub-plan.
+		LogPlan.Scan scan = logPlan.joinChildren.get(finalJoinOrder.get(0));	// Left most scan.
 		DBCatalog.RelationInfo relation = DBCatalog.getCatalog().tables.get(scan.fileName);
-		for (DBCatalog.AttrInfo attr : relation.attrs) {
+		for (DBCatalog.AttrInfo attr : relation.attrs)
 			leftAttrs.add(scan.alias + '.' + attr.name);
-		}
 		
 		for (int i = 1; i < finalJoinOrder.size(); ++i) {
 			finalJoinCond.add(new Vector<>());
@@ -269,10 +408,10 @@ public class PhyPlanOptimizer {
 			HashSet<String> rightAttrs = new HashSet<>();
 			scan = logPlan.joinChildren.get(finalJoinOrder.get(i));
 			relation = DBCatalog.getCatalog().tables.get(scan.fileName);
-			for (DBCatalog.AttrInfo attr : relation.attrs) {
+			for (DBCatalog.AttrInfo attr : relation.attrs)
 				rightAttrs.add(scan.alias + '.' + attr.name);
-			}
 			
+			// If find a equality condition, use SMJ. Otherwise, use BNLJ.
 			boolean findEqualCond = false;
 			for (Condition cond : logPlan.joinConditions) {
 				if (leftAttrs.contains(cond.leftName) && rightAttrs.contains(cond.rightName)) {

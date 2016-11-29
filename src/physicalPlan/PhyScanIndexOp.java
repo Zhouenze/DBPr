@@ -5,6 +5,7 @@ import java.io.RandomAccessFile;
 import java.lang.Math;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Map.Entry;
 
 import base.Condition;
 import base.DBCatalog;
@@ -21,7 +22,7 @@ import logicalPlan.LogPlan;
 public class PhyScanIndexOp extends PhyScanOp {
 	
 	private String indexPath = null;
-	private String keyName = null;
+	private String keyName = null;				// This is part name!
 	private int keyId = -1;						// ID of key in data.
 	private int lowKey = Integer.MIN_VALUE;		// They are set to this value so that if no condition is given, all the key value is valid.
 	private int highKey = Integer.MAX_VALUE;	// The valid range is [lowKey, highKey].
@@ -51,6 +52,7 @@ public class PhyScanIndexOp extends PhyScanOp {
 	 * @param
 	 * 		fileName: file being scanned by this index scan operator.
 	 * 		alias: alias of this operator in query.
+	 * 		keyNameP: part name of key. Not full name!
 	 */
 	public PhyScanIndexOp(String fileName, String alias, String keyNameP) {
 		super();
@@ -102,13 +104,15 @@ public class PhyScanIndexOp extends PhyScanOp {
 	 */
 	public boolean initialize(LogPlan.Scan scan) {
 		if (scan != null) {
-			for (LogPlan.PushedConditions cond : scan.conditions) {
-				if (cond.attrName.equals(keyName)) {
-					lowKey = cond.lowValue;
-					highKey = cond.highValue;
+			for (Entry<String, LogPlan.HighLowCondition> entry : scan.conditions.entrySet()) {
+				if (entry.getKey().equals(alias + '.' + keyName)) {
+					lowKey = entry.getValue().lowValue;
+					highKey = entry.getValue().highValue;
 				} else {
-					conditions.add(new Condition(scan.alias + '.' + cond.attrName + " <= " + cond.highValue));
-					conditions.add(new Condition(scan.alias + '.' + cond.attrName + " >= " + cond.lowValue));
+					if (entry.getValue().highValue != Integer.MAX_VALUE)
+						conditions.add(new Condition(entry.getKey() + " <= " + entry.getValue().highValue));
+					if (entry.getValue().lowValue != Integer.MIN_VALUE)
+						conditions.add(new Condition(entry.getKey() + " >= " + entry.getValue().lowValue));
 				}
 			}
 			conditions.addAll(scan.otherConditions);

@@ -27,31 +27,28 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	
 	
 	
-	public Vector<Condition> joinConditions = new Vector<>();	// All the conditions on join operator.
-	public class PushedConditions {
-		public String attrName;
+	public Vector<Condition> joinConditions = new Vector<>();	// All the conditions on join operator. Full name. Should include pushed conditions.
+	public class HighLowCondition {
 		public Integer lowValue;			// attr >= lowValue. If not exist, set to Integer.MIN_VALUE
 		public Integer highValue;			// attr <= highValue. If not exist, set to Integer.MAX_VALUE
 	}
 	public class Scan {
 		public String fileName;
 		public String alias;
-		public Vector<PushedConditions> conditions = new Vector<>();	// This part is pushed conditions
-		public Vector<Condition> otherConditions = new Vector<>();		// This part is other conditions, including R.A < R.B, R.A <> 0, etc
-		
-		public int findIdOfPushedCond(String attrName) {
-			for (int i = 0; i < conditions.size(); ++i)
-				if (conditions.get(i).attrName.equals(attrName))
-					return i;
-			return -1;
-		}
+		public HashMap<String, HighLowCondition> conditions = new HashMap<>();	// This part map an attribute to it's high-low value. Full name.
+																				// Every attribute that has some restriction including >, >=, <, <=, = constant should be here.
+																				// Otherwise should not be one for it.
+		public Vector<Condition> otherConditions = new Vector<>();				// This part is other conditions, including R.A < R.B, R.A <> 0, etc
 	}
-	public Vector<Scan> joinChildren = new Vector<>();			// Children of join represented by Scan, in output order (from A, B => joinChildren[0].fileName == A && joinChildren[1].fileName == B).
+	public Vector<Scan> joinChildren = new Vector<>();			// Children of join represented by Scan, in output order 
+																// (from A, B => joinChildren[0].fileName == A && joinChildren[1].fileName == B).
+																// If only one relation, it should also appear here.
 	public HashMap<String, String> aliasDict = new HashMap<>();	// A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
 	public Vector<String> orderAttrs = null;					// Order by attributes, in full name. null means there is no order by operator.
 	public Vector<String> projAttrs = null;						// Projection attributes, in full name. null means select all.
 	public boolean hasDist = false;								// Whether there is a distinct operator.
 	
+	// About union-found: every attribute should be in some union, may be single-element union.
 	
 	
 	
