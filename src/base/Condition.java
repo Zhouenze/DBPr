@@ -16,8 +16,8 @@ public final class Condition {
 	}
 	public op operator;
 	
-	public String leftName = "";	// Name of the left part of this expression. If null, left part is a instant number indicated by left.
-	public String rightName = "";	// Name of the right part of this expression. If null, right part is a instant number indicated by right.
+	public String leftName = "";	// Name of the left part of this expression. If null, left part is an instant number indicated by left.
+	public String rightName = "";	// Name of the right part of this expression. If null, right part is an instant number indicated by right.
 	public int left = 0;			// Instant left number if leftName is null.
 	public int right = 0;			// Instant right number if rightName is null.
 	
@@ -57,6 +57,31 @@ public final class Condition {
 		// Flip the condition to a more favorable direction.
 		if (leftName == null && rightName != null)
 			flip();
+	}
+	
+	/**
+	 * Test whether this condition is attr = attr.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isEquality() {
+		if (leftName == null || rightName == null || operator != op.e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Test whether this condition is attr OP val, where OP is not <> (or != or ne).
+	 * Note "Usable" here is slightly different from that defined in the instructions,
+	 * in terms of excluding the form of attr = attr, which is tested separately.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isUsable() {
+		// Condition 都被flip过，所以一定不是 左val OP 右attr ///////////////////
+		if (leftName == null || rightName != null || operator == op.ne) {
+			return false;
+		}
+		return true;
 	}
 	
 	/*
