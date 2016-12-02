@@ -55,7 +55,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	public boolean hasDist = false;								// Whether there is a distinct operator.
 	
 	
-	// About union-found: every attribute should be in some union, may be single-element union.
 	// Union Find
 	public Map<String, Cluster> union_find = new HashMap<String, Cluster>();
 
@@ -88,7 +87,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			c1.attrs.add(attr);
 		}
 		// update c1 HighLow
-		// assume no "bad" where clauses 没有交集的情况不考虑 //////////////////////////////
 		if(c1.condts == null) {
 			c1.condts = new HighLowCondition();
 		}
@@ -112,9 +110,11 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 		} 
 		
 		if (crrt.operator == op.g || crrt.operator == op.ge) {
-			c.condts.lowValue = c.condts.lowValue > crrt.right ? c.condts.lowValue : crrt.right;
+			int right = crrt.operator == op.g ? crrt.right + 1 : crrt.right;
+			c.condts.lowValue = c.condts.lowValue > right ? c.condts.lowValue : right;
 		} else if (crrt.operator == op.l || crrt.operator == op.le) {
-			c.condts.highValue = c.condts.highValue < crrt.right ? c.condts.highValue : crrt.right;
+			int right = crrt.operator == op.l ? crrt.right - 1 : crrt.right;
+			c.condts.highValue = c.condts.highValue < right ? c.condts.highValue : right;
 		} else if (crrt.operator == op.e) { // 可能会有问题 还没想明白 //////////////
 			c.condts.lowValue = crrt.right;
 			c.condts.highValue = crrt.right;
@@ -129,7 +129,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	public String query = "";									// Original query.
 																// building for convenience of future optimization.
 	
-	public LogOp dataRoot = null;						// Root node of the data part of this plan, maybe a join operator or a scan operator.
 	
 	/*
 	 * Constructor of this class.
@@ -176,7 +175,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 				this.projAttrs.add(str);
 			}
 		}
-		// if * 怎么把所有attr加到projAttrs里面？/////////
 		
 		// From Clause
 		// Build Scan objects; Prepare them for join if more than 1
@@ -189,7 +187,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			aliasMap.put(tempScan.alias, tempScan);
 			this.joinChildren.add(tempScan);
 			
-			// proj怎么和scan连起来？要改LogProjOp吗？不然怎么弄的 //////////////
 			
 		} else {
 			
