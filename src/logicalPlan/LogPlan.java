@@ -46,11 +46,10 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 		public Vector<Condition> otherConditions = new Vector<>();				// This part is other conditions, including R.A < R.B, R.A <> 0, etc
 	}
 	
-	public Map<String, Scan> aliasMap = new HashMap<>();        // The map to 
+	public Map<String, Scan> aliasMap = new HashMap<>();        // The map from table alias to its Scan object
 	public Vector<Scan> joinChildren = new Vector<>();			// Children of join represented by Scan, in output order 
 																// (from A, B => joinChildren[0].fileName == A && joinChildren[1].fileName == B).
 																// If only one relation, it should also appear here.
-	public Map<String, String> aliasDict = new HashMap<>();	    // A dictionary to change alias to filename. If no alias is used, alias is the same as filename.
 	public Vector<String> orderAttrs = null;					// Order by attributes, in full name. null means there is no order by operator.
 	public Vector<String> projAttrs = null;						// Projection attributes, in full name. null means select all.
 	public boolean hasDist = false;								// Whether there is a distinct operator.
@@ -126,16 +125,10 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	
 	
 	
-	private LogSortOp sort = null;						// Sort logical operator in this plan.
-	private LogProjOp proj = null;						// Projection logical operator in this plan.
 	
 	public String query = "";									// Original query.
-	public Vector<Condition> conditions = new Vector<>();		// All the conditions in this query. Condition distribution will be postponed to physical plan 
 																// building for convenience of future optimization.
-	public Vector<String> naiveJoinOrder = new Vector<>();		// For a naive plan, the order of scan is the same as input. This field will be deleted after 
-																// optimization project is done because then we will decide the order on our own.
 	
-	public LogOp root = null;							// Root node of this logical plan.
 	public LogOp dataRoot = null;						// Root node of the data part of this plan, maybe a join operator or a scan operator.
 	
 	/*
@@ -157,56 +150,36 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	@Override
 	public void visit(PlainSelect plainSelect) {
 		
-		LogOp temp = null;
 		
 		// If there is a distinct, build it.
 		if (plainSelect.getDistinct() != null) {
-			root = temp = new LogDistOp();
+			this.hasDist = true;
 		}
 		
 		// If there is a sort, build it.
 		if (plainSelect.getOrderByElements() != null) {
-			if (temp != null) {
-				((LogDistOp)temp).hasOrderby = true;
-				temp.child = sort = new LogSortOp();
-				temp = temp.child;
-			} else {
-				root = temp = sort = new LogSortOp();
-			}
 			
 			// Get all the sort attributes and save them to sort operator.
 			Iterator orderIterator = plainSelect.getOrderByElements().iterator();
 			while (orderIterator.hasNext()) {
 				String str = orderIterator.next().toString();
-				sort.sortAttrs.add(str);
+				this.orderAttrs.add(str);
 			}
-		} else if (temp != null) {
-			((LogDistOp)temp).hasOrderby = true;
-			temp.child = sort = new LogSortOp();
-			temp = temp.child;
-		}
-		
-		// Make a projection operator which is mandatory.
-		if (temp != null) {
-			temp.child = proj = new LogProjOp();
-			temp = temp.child;
-		} else {
-			root = temp = proj = new LogProjOp();
-		}
+		} 
 		
 		// Get all the projection target. If *, set selectAll. If no *, insert all the others to projection operator.
-		proj.selectAll = plainSelect.getSelectItems().get(0).toString().equals("*");
-		if (!proj.selectAll) {
+		boolean ifSelectAll = plainSelect.getSelectItems().get(0).toString().equals("*");
+		if (!ifSelectAll) {
 			Iterator projIterator = plainSelect.getSelectItems().iterator();
 			while (projIterator.hasNext()) {
 				String str = projIterator.next().toString();
-				proj.projAttrs.add(str);
+				this.projAttrs.add(str);
 			}
 		}
+		// if * 怎么把所有attr加到projAttrs里面？/////////
 		
 		// From Clause
 		// Build Scan objects; Prepare them for join if more than 1
-		// naiveJoinOrder这个instance variable还要吗？////////////////////////////////////
 		if (plainSelect.getJoins() == null) {
 			
 			// # of scan = 1
@@ -214,8 +187,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			tempScan.fileName = plainSelect.getFromItem().toString().split(" ")[0];
 			tempScan.alias = plainSelect.getFromItem().getAlias() == null ? tempScan.fileName : plainSelect.getFromItem().getAlias();
 			aliasMap.put(tempScan.alias, tempScan);
-			this.aliasDict.put(tempScan.alias, tempScan.fileName);
-			this.naiveJoinOrder.add(tempScan.alias);
 			this.joinChildren.add(tempScan);
 			
 			// proj怎么和scan连起来？要改LogProjOp吗？不然怎么弄的 //////////////
@@ -227,8 +198,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			tempScan.fileName = plainSelect.getFromItem().toString().split(" ")[0];
 			tempScan.alias = plainSelect.getFromItem().getAlias() == null ? tempScan.fileName : plainSelect.getFromItem().getAlias();
 			aliasMap.put(tempScan.alias, tempScan);
-			this.aliasDict.put(tempScan.alias, tempScan.fileName);
-			this.naiveJoinOrder.add(tempScan.alias);
 			this.joinChildren.add(tempScan);
 			
 			Iterator joinsIt = plainSelect.getJoins().iterator();
@@ -237,8 +206,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			tempScan.fileName = join.getRightItem().toString().split(" ")[0];
 			tempScan.alias = (join.getRightItem().getAlias() == null ? tempScan.fileName : join.getRightItem().getAlias());
 			aliasMap.put(tempScan.alias, tempScan);
-			aliasDict.put(tempScan.alias, tempScan.fileName);
-			naiveJoinOrder.add(tempScan.alias);
+			this.joinChildren.add(tempScan);
 			
 			// Add the rest "join"
 			while (joinsIt.hasNext()) {
@@ -247,21 +215,18 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 				tempScan.fileName = join.getRightItem().toString().split(" ")[0];
 				tempScan.alias = (join.getRightItem().getAlias() == null ? tempScan.fileName : join.getRightItem().getAlias());
 				aliasMap.put(tempScan.alias, tempScan);
-				aliasDict.put(tempScan.alias, tempScan.fileName);
-				naiveJoinOrder.add(tempScan.alias);
+				this.joinChildren.add(tempScan);
 			}
 		}
 		
 		// Where Clause
 		// Build up Union Find, then update Scan objects
 		// Note that we won't have such condition as val OP val this time.
-		// conditions这个instance variable还要吗？/////////////////////////////
 		if (plainSelect.getWhere() != null) {
 			String [] whereClauses;
 			whereClauses = plainSelect.getWhere().toString().split("AND");
 			for (int i = 0; i < whereClauses.length; ++i) {
 				Condition crrt = new Condition(whereClauses[i]);
-				conditions.add(crrt);
 				
 				if (crrt.isEquality()) { // isEquality: union
 					Cluster c1 = this.find(crrt.leftName);
@@ -272,7 +237,6 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 					this.setConds(c, crrt);
 				} else { // other conditions: directly updated in Scan objects
 					// attr OP attr 这种是要把两个attr对应的table的Scan obj都更新是吧？是..///////
-					// attr name的格式是R.A这种吧 /////////
 					String alias = crrt.leftName.split(".")[0];
 					aliasMap.get(alias).otherConditions.add(crrt);
 					
