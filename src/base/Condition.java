@@ -16,8 +16,8 @@ public final class Condition {
 	}
 	public op operator;
 	
-	public String leftName = "";	// Name of the left part of this expression. If null, left part is an instant number indicated by left.
-	public String rightName = "";	// Name of the right part of this expression. If null, right part is an instant number indicated by right.
+	public String leftName = "";	// Name of the left part of this expression. If null, left part is an integer number indicated by left.
+	public String rightName = "";	// Name of the right part of this expression. If null, right part is an integer number indicated by right.
 	public int left = 0;			// Instant left number if leftName is null.
 	public int right = 0;			// Instant right number if rightName is null.
 	

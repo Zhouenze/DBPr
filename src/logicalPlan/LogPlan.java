@@ -46,6 +46,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 		public Vector<Condition> otherConditions = new Vector<>();				// This part is other conditions, including R.A < R.B, R.A <> 0, etc
 	}
 	
+	public Map<String, Scan> aliasMap = new HashMap<>();        // The map to 
 	public Vector<Scan> joinChildren = new Vector<>();			// Children of join represented by Scan, in output order 
 																// (from A, B => joinChildren[0].fileName == A && joinChildren[1].fileName == B).
 																// If only one relation, it should also appear here.
@@ -57,7 +58,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 	
 	// About union-found: every attribute should be in some union, may be single-element union.
 	// Union Find
-	public Map<String, Cluster> union_find = new HashMap();
+	public Map<String, Cluster> union_find = new HashMap<String, Cluster>();
 
 	private class Cluster{
 		// 貌似是unnecessary的
@@ -204,15 +205,15 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 		}
 		
 		// From Clause
-		// Build Scan Objects that need to be joined if more than 1
+		// Build Scan objects; Prepare them for join if more than 1
 		// naiveJoinOrder这个instance variable还要吗？////////////////////////////////////
 		if (plainSelect.getJoins() == null) {
 			
 			// # of scan = 1
 			Scan tempScan = new Scan();
-			/////////////////////////////////////  为什么要split(" ")?  /////////////////
 			tempScan.fileName = plainSelect.getFromItem().toString().split(" ")[0];
 			tempScan.alias = plainSelect.getFromItem().getAlias() == null ? tempScan.fileName : plainSelect.getFromItem().getAlias();
+			aliasMap.put(tempScan.alias, tempScan);
 			this.aliasDict.put(tempScan.alias, tempScan.fileName);
 			this.naiveJoinOrder.add(tempScan.alias);
 			this.joinChildren.add(tempScan);
@@ -225,6 +226,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			Scan tempScan = new Scan();
 			tempScan.fileName = plainSelect.getFromItem().toString().split(" ")[0];
 			tempScan.alias = plainSelect.getFromItem().getAlias() == null ? tempScan.fileName : plainSelect.getFromItem().getAlias();
+			aliasMap.put(tempScan.alias, tempScan);
 			this.aliasDict.put(tempScan.alias, tempScan.fileName);
 			this.naiveJoinOrder.add(tempScan.alias);
 			this.joinChildren.add(tempScan);
@@ -234,6 +236,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 			tempScan = new Scan();
 			tempScan.fileName = join.getRightItem().toString().split(" ")[0];
 			tempScan.alias = (join.getRightItem().getAlias() == null ? tempScan.fileName : join.getRightItem().getAlias());
+			aliasMap.put(tempScan.alias, tempScan);
 			aliasDict.put(tempScan.alias, tempScan.fileName);
 			naiveJoinOrder.add(tempScan.alias);
 			
@@ -243,6 +246,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 				tempScan = new Scan();
 				tempScan.fileName = join.getRightItem().toString().split(" ")[0];
 				tempScan.alias = (join.getRightItem().getAlias() == null ? tempScan.fileName : join.getRightItem().getAlias());
+				aliasMap.put(tempScan.alias, tempScan);
 				aliasDict.put(tempScan.alias, tempScan.fileName);
 				naiveJoinOrder.add(tempScan.alias);
 			}
@@ -250,6 +254,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 		
 		// Where Clause
 		// Build up Union Find, then update Scan objects
+		// Note that we won't have such condition as val OP val this time.
 		// conditions这个instance variable还要吗？/////////////////////////////
 		if (plainSelect.getWhere() != null) {
 			String [] whereClauses;
@@ -266,14 +271,25 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 					Cluster c = this.find(crrt.leftName);
 					this.setConds(c, crrt);
 				} else { // other conditions: directly updated in Scan objects
+					// attr OP attr 这种是要把两个attr对应的table的Scan obj都更新是吧？是..///////
+					// attr name的格式是R.A这种吧 /////////
+					String alias = crrt.leftName.split(".")[0];
+					aliasMap.get(alias).otherConditions.add(crrt);
 					
-					
-					
+					if(crrt.rightName != null) {
+						alias = crrt.rightName.split(".")[0];
+						aliasMap.get(alias).otherConditions.add(crrt);
+					}
 				}
 				
 			}
 			
 			// update Scan objects according to union_find, i.e. the result of union find procedure
+			// from attr names, separate out table alias, link to Scan obj., update its conditions map
+			for(String attr: union_find.keySet()) {
+				String alias = attr.split(".")[0];
+				aliasMap.get(alias).conditions.put(attr, union_find.get(attr).condts);
+			}
 			
 		}
 	}
