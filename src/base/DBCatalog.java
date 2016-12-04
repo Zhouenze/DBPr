@@ -1,8 +1,17 @@
 package base;
+
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -211,6 +220,8 @@ public final class DBCatalog {
 		statReader.close();
 		
 		// Read from index info file to get index setting.
+		
+		/*  HOLD ON TO READING  INDEX
 		append = (this.inputPath.contains("/") ? "db/index_info.txt" : "db\\index_info.txt");
 		BufferedReader indexesReader = new BufferedReader(new FileReader(this.inputPath + append));
 		String indexLine = null;
@@ -219,6 +230,7 @@ public final class DBCatalog {
 			tables.get(indexConfig[0]).indexes.add(new IndexInfo(indexConfig[1], indexConfig[2]));
 		}
 		indexesReader.close();
+		*/
 		
 		
 		
@@ -232,6 +244,65 @@ public final class DBCatalog {
 		
 	}
 	
+	/*
+	 * Gather statistics about data and write stats to db/stat.txt
+	 */
+	public void gatherStats() {
+		try {
+			for (File f: new File("Samples/samples/input/db").listFiles()) {
+				System.out.println(f.getName());
+			}
+			BufferedReader schemaReader = new BufferedReader(new FileReader(this.inputPath+"db/schema.txt"));
+			File statFile = new File(this.inputPath+"db/stat.txt");
+			statFile.createNewFile();
+            BufferedWriter statFileWriter = new BufferedWriter(new FileWriter(statFile));
+            
+			String line = null;
+			Tuple tempTuple;
+			while ((line=schemaReader.readLine()) != null) {
+				
+				String [] content = line.trim().split(" ");
+				TupleReader tempTR = new TupleReader(this.inputPath+"db/data/"+content[0]);
+				Map<String, ArrayList<Integer>> tempInfo = new HashMap<String, ArrayList<Integer>>();
+				for (int i = 1; i < content.length; ++i) {
+					tempInfo.put(content[i], new ArrayList<Integer>());
+					tempInfo.get(content[i]).add(Integer.MAX_VALUE);
+					tempInfo.get(content[i]).add(Integer.MIN_VALUE);
+				}
+				int tempCount = 0;
+				while ((tempTuple = tempTR.getNextTuple()) != null) {
+					++tempCount;
+					int tempInt = 0 ;
+					for (int j = 0; j < tempTuple.data.size(); ++j) {
+						ArrayList<Integer> tempArr = tempInfo.get(content[j+1]);
+						tempInt = tempTuple.data.get(j);
+						if (tempInt < tempArr.get(0)) {
+							tempArr.set(0, tempInt);
+						}
+						if (tempInt > tempArr.get(1)) {
+							tempArr.set(1,  tempInt);
+						}
+					}
+				}
+				String minMaxStr = "";
+				for (int k = 1; k < content.length; ++k) {
+					ArrayList<Integer> tempArr2 = tempInfo.get(content[k]);
+					minMaxStr += content[k]+","+String.valueOf(tempArr2.get(0)) + "," + String.valueOf(tempArr2.get(1)) + " ";
+					
+				}
+	
+				System.out.println(minMaxStr);
+				statFileWriter.write(content[0] + " " + String.valueOf(tempCount) + " " + minMaxStr + "\n" );
+				
+			}
+			schemaReader.close();
+			statFileWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	/*
 	 * Print catalog information.
 	 */

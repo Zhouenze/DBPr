@@ -18,7 +18,6 @@ import physicalPlan.PhyPlanPrintVisitor;
 import physicalPlan.PhyScanBfOp;
 import physicalPlan.PhySortExOp;
 
-
 /*
  * DBPrPro2Main
  * Entrance of the whole project.
@@ -77,6 +76,10 @@ public final class DBPrPro2Main {
 		System.out.println("Built catalog:");
 		DBCatalog.getCatalog().print();
 		System.out.println();
+		DBCatalog.getCatalog().gatherStats();
+	}	}
+
+		/* COMMENTED OUT for later uses
 		
 		// Build index if needed.
 //		if (DBCatalog.getCatalog().buildIndexes) {
@@ -164,5 +167,7 @@ public final class DBPrPro2Main {
 				System.err.println("Exception occurred with CCJSqlParser: " + e.toString());
 			}
 //		}
+ 
 	}
 }
+*/
