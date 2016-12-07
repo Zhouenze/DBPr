@@ -2,6 +2,7 @@ package physicalPlan;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import base.Condition;
@@ -10,7 +11,7 @@ import base.Tuple;
 import base.TupleReader;
 import base.TupleWriter;
 
-/*
+/**
  * This class is the sort-merge-join operator.
  * 
  * @author Enze Zhou ez242
@@ -41,7 +42,7 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 		++count;
 	}
 	
-	/*
+	/**
 	 * Method that returns next tuple in the output of this operator.
 	 * Call innerGetNextTuple to get tuples that satisfy equality conditions
 	 * until find one that also satisfies other conditions.
@@ -224,7 +225,7 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 			file.delete();
 	}
 	
-	/*
+	/**
 	 *  Compare an inner tuple with an outer tuple to see if they.
 	 *  @param
 	 *  	inner1 and inner2 are two inner tuples being compared.
@@ -241,7 +242,7 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 		return 0;
 	}
 	
-	/*
+	/**
 	 *  Compare two inner tuples to see if the matching group has ended.
 	 *  @param
 	 *  	inner1 and inner2 are two inner tuples being compared.
@@ -256,6 +257,23 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 				return in1 < in2 ? -1 : 1;
 		}
 		return 0;
+	}
+
+	/**
+	 * Get string representation of this operator.
+	 * @override from superclass PhyJoinOp
+	 * @see java.lang.Object#toString()
+	 * @return
+	 * 		string representation of this operator.
+	 */
+	@Override
+	public String toString() {
+		ArrayList<String> conditionsStrings = new ArrayList<>();
+		for (Condition cond : conditions)
+			conditionsStrings.add(cond.toString());
+		for (Condition cond : extraConditions)
+			conditionsStrings.add(cond.toString());
+		return String.format("SMJ[%s]", String.join(" AND ", conditionsStrings));
 	}
 
 }

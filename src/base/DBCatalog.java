@@ -3,24 +3,21 @@ package base;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-/*
+/**
  * DBCatalog
  * Catalog of this database, including input/output path and all the schema information of its tables loaded from schema.txt.
  * Singleton pattern because only one catalog instance is needed for every database.
  * 
- * @author Enze Zhou ez242
+ * @authors Enze Zhou ez242, Weicheng Yu wy248
  */
 public final class DBCatalog {
 	
@@ -32,16 +29,18 @@ public final class DBCatalog {
 		public String keyName;			// Part name.
 		public Integer clustered;
 		public Integer leafNum;			// Not set when construction. Will be set when used and later can accelerate process.
+		public Integer order;
 		
-		/*
+		/**
 		 * Constructor of index info class.
 		 * @param
 		 * 		keyName: name of key.
 		 * 		clustered: if the index is clustered.
 		 */
-		public IndexInfo(String keyName, String clustered) {
+		public IndexInfo(String keyName, String clustered, String order) {
 			this.keyName = keyName;
 			this.clustered = Integer.valueOf(clustered);
+			this.order = Integer.valueOf(order);
 			leafNum = -1;
 		}
 	}
@@ -55,7 +54,7 @@ public final class DBCatalog {
 		public Integer highValue;		// Largest value according to statistics.
 		public Integer lowValue;		// Smallest value according to statistics.
 		
-		/*
+		/**
 		 * Constructor.
 		 * @param
 		 * 		attrInfo: string containing information of this attribute, like "G,0,5000"
@@ -76,7 +75,7 @@ public final class DBCatalog {
 		public Vector<AttrInfo> attrs = new Vector<>();
 		public Vector<IndexInfo> indexes = new Vector<>();
 		
-		/*
+		/**
 		 * Function to get an attribute with particular part name.
 		 * @param
 		 * 		attrName: part name of the attribute.
@@ -88,7 +87,7 @@ public final class DBCatalog {
 			return null;
 		}
 		
-		/*
+		/**
 		 * Get attribute index.
 		 * @param
 		 * 		attrName: part name of the attribute.
@@ -100,7 +99,7 @@ public final class DBCatalog {
 			return -1;
 		}
 		
-		/*
+		/**
 		 * Get index with keyName
 		 * @param
 		 * 		keyName: part key name of the index.
@@ -114,9 +113,6 @@ public final class DBCatalog {
 	}
 	
 	public HashMap<String, RelationInfo> tables = null;		// Map file names to information of that relation.
-	
-	
-	
 	
 	
 	
@@ -139,13 +135,13 @@ public final class DBCatalog {
 	 */
 	private DBCatalog() {}
 	
-	/*
+	/**
 	 * Get the only instance of this class.
 	 * @return the only instance of this class.
 	 */
 	public static DBCatalog getCatalog() { return catalog; }
 	
-	/*
+	/**
 	 * Use inputPath and outputPath to build catalog information.
 	 * @param inputPath
 	 * 		input path from cmd line.
@@ -199,7 +195,8 @@ public final class DBCatalog {
 //		indexesReader.close();
 		
 		
-		
+		// gather statistics
+		gatherStats();
 		
 		tables = new HashMap<>();
 		
@@ -220,28 +217,15 @@ public final class DBCatalog {
 		statReader.close();
 		
 		// Read from index info file to get index setting.
-		
-		/*  HOLD ON TO READING  INDEX
 		append = (this.inputPath.contains("/") ? "db/index_info.txt" : "db\\index_info.txt");
 		BufferedReader indexesReader = new BufferedReader(new FileReader(this.inputPath + append));
 		String indexLine = null;
 		while ((indexLine = indexesReader.readLine()) != null) {
 			String [] indexConfig = indexLine.trim().split(" ");
-			tables.get(indexConfig[0]).indexes.add(new IndexInfo(indexConfig[1], indexConfig[2]));
+			for (int i = 1; i < indexConfig.length; i += 3)
+				tables.get(indexConfig[0]).indexes.add(new IndexInfo(indexConfig[i], indexConfig[i + 1], indexConfig[i + 2]));
 		}
 		indexesReader.close();
-		*/
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	}
 	
 	/*
@@ -249,9 +233,9 @@ public final class DBCatalog {
 	 */
 	public void gatherStats() {
 		try {
-			for (File f: new File("Samples/samples/input/db").listFiles()) {
-				System.out.println(f.getName());
-			}
+//			for (File f: new File("Samples/samples/input/db").listFiles()) {
+//				System.out.println(f.getName());
+//			}
 			BufferedReader schemaReader = new BufferedReader(new FileReader(this.inputPath+"db/schema.txt"));
 			File statFile = new File(this.inputPath+"db/stat.txt");
 			statFile.createNewFile();
@@ -291,18 +275,18 @@ public final class DBCatalog {
 					
 				}
 	
-				System.out.println(minMaxStr);
+//				System.out.println(minMaxStr);
 				statFileWriter.write(content[0] + " " + String.valueOf(tempCount) + " " + minMaxStr + "\n" );
 				
 			}
 			schemaReader.close();
 			statFileWriter.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 	}
+	
 	/*
 	 * Print catalog information.
 	 */
@@ -335,12 +319,15 @@ public final class DBCatalog {
 		for (String tableName : tableNames) {
 			System.out.println("\t" + tableName + ":");
 			RelationInfo table = tables.get(tableName);
+			
+			// print schema information and statistics
 			System.out.print("\t\t" + table.tupleNum + "  ");
 			for (int j = 0; j < table.attrs.size(); ++j) {
 				System.out.print(table.attrs.get(j).name + ',' + table.attrs.get(j).lowValue + ',' + table.attrs.get(j).highValue + "  ");
 			}
 			System.out.println();
 			
+			// print index information
 			System.out.print("\t\t");
 			for (int j = 0; j < table.indexes.size(); ++j) {
 				System.out.print(table.indexes.get(j).keyName + ',' + table.indexes.get(j).clustered + "  ");

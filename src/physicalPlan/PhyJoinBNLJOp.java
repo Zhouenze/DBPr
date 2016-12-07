@@ -1,11 +1,12 @@
 package physicalPlan;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import base.Condition;
 import base.Tuple;
 
-/*
+/**
  * Brute force implementation of join operator
  * Operator that joins the outputs of its two children, both are Scan Operators inferred by Operator pointer.
  * Inherited from PhyCondOp to have a conditions vector that is used to filter the output tuples of this node.
@@ -29,7 +30,7 @@ public final class PhyJoinBNLJOp extends PhyJoinOp {
 	private Tuple rightTuple = null;	// The right tuple now. This need to be an element of class
 										// because it should keep between different calls to getNextTuple().
 
-	/*
+	/**
 	 * Constructor for BNLJ
 	 * @param bufferPages specify how many pages a block uses
 	 * Note the constructor assumes that you do not have knowledge about files
@@ -97,7 +98,7 @@ public final class PhyJoinBNLJOp extends PhyJoinOp {
 	
 	
 	
-	/*
+	/**
 	 * Method that returns next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
@@ -144,7 +145,7 @@ public final class PhyJoinBNLJOp extends PhyJoinOp {
 		return null;
 	}
 
-	/*
+	/**
 	 * Method that resets output of this node to the beginning.
 	 * @override from super class Operator
 	 */
@@ -155,6 +156,21 @@ public final class PhyJoinBNLJOp extends PhyJoinOp {
 		
 		child.reset();
 		rChild.reset();
+	}
+
+	/**
+	 * Get string representation of this operator.
+	 * @override from superclass PhyJoinOp
+	 * @see java.lang.Object#toString()
+	 * @return
+	 * 		string representation of this operator.
+	 */
+	@Override
+	public String toString() {
+		ArrayList<String> conditionsStrings = new ArrayList<>();
+		for (Condition cond : conditions)
+			conditionsStrings.add(cond.toString());
+		return String.format("BNLJ[%s]", String.join(" AND ", conditionsStrings));
 	}
 
 }

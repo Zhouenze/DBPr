@@ -1,6 +1,6 @@
 package physicalPlan;
 
-/*
+/**
  * Base class of join physical operator
  * 
  * @author Enze Zhou ez242
@@ -9,7 +9,7 @@ public abstract class PhyJoinOp extends PhyCondOp {
 	
 	public PhyOp rChild = null;		// Right child of this join operator is always a scan operator.
 	
-	/*
+	/**
 	 * Method that builds output schema of this node.
 	 * @override from super class Operator
 	 */
@@ -29,4 +29,12 @@ public abstract class PhyJoinOp extends PhyCondOp {
 			schema.put(name, rChild.schema.get(name) + add);
 		}
 	}
+	
+	/**
+	 * Get string representation of this operator.
+	 * @see java.lang.Object#toString()
+	 * @return
+	 * 		string representation of this operator.
+	 */
+	public abstract String toString();
 }

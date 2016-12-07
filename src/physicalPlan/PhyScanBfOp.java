@@ -21,7 +21,7 @@ public final class PhyScanBfOp extends PhyScanOp {
 	private boolean read = false;
 	
 	
-	/*
+	/**
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class Operator
 	 * @return next tuple in the output of this node.
@@ -60,7 +60,7 @@ public final class PhyScanBfOp extends PhyScanOp {
 		return null;
 	}
 
-	/*
+	/**
 	 * Method that reset output of this node to the beginning.
 	 * @override from super class Operator
 	 */
@@ -73,6 +73,18 @@ public final class PhyScanBfOp extends PhyScanOp {
 			e.printStackTrace();
 		}
 
+	}
+
+	/**
+	 * Get string representation of this operator.
+	 * @override from superclass PhyScanOp
+	 * @see java.lang.Object#toString()
+	 * @return
+	 * 		string representation of this operator.
+	 */
+	@Override
+	public String toString() {
+		return String.format("TableScan[%s]", fileName);
 	}
 
 }

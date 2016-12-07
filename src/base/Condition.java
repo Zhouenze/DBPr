@@ -1,27 +1,54 @@
 package base;
 import java.util.HashMap;
 
-/*
+/**
  * Condition
  * Class that represents a condition expression.
  * 
- * @author Enze Zhou ez242
+ * @authors Enze Zhou ez242, Shuang Zhang sz468
  */
 public final class Condition {
 	
 	// Enumerate all the 6 different operators:
 	// less than, greater than, less or equal, greater or equal, equal, not equal
 	public enum op {
-		l, g, le, ge, e, ne
+		l("<"),
+		g(">"),
+		le("<="),
+		ge(">="),
+		e("="),
+		ne("<>");
+		
+		private final String opStr;			// String representation of an operator
+		
+		/**
+		 * Constructor of a enumerate element
+		 * @param opStr
+		 * 		String representation of this element.
+		 */
+		private op(final String opStr) {
+			this.opStr = opStr;
+		}
+		
+		/**
+		 * Get string representation of this operator.
+		 * @see java.lang.Object#toString()
+		 * @return
+		 * 		string representation of this operator.
+		 */
+		@Override
+		public String toString() {
+			return this.opStr;
+		}
 	}
-	public op operator;
+	public op operator;				// operator of a condition
 	
 	public String leftName = "";	// Name of the left part of this expression. If null, left part is an integer number indicated by left.
 	public String rightName = "";	// Name of the right part of this expression. If null, right part is an integer number indicated by right.
 	public int left = 0;			// Instant left number if leftName is null.
 	public int right = 0;			// Instant right number if rightName is null.
 	
-	/*
+	/**
 	 * Constructor that build a condition from a string.
 	 * @param condStr
 	 * 		String that is going to be turned into a condition.
@@ -77,14 +104,14 @@ public final class Condition {
 	 * @return true if it is, false otherwise.
 	 */
 	public boolean isUsable() {
-		// Condition 都被flip过，所以一定不是 左val OP 右attr ///////////////////
+		// Condition 閮借flip杩囷紝鎵�浠ヤ竴瀹氫笉鏄� 宸al OP 鍙砤ttr ///////////////////
 		if (leftName == null || rightName != null || operator == op.ne) {
 			return false;
 		}
 		return true;
 	}
 	
-	/*
+	/**
 	 * Test whether a tuple satisfies this condition.
 	 * Notice: 	this function assumes that the input has all the information needed to judge
 	 * 			so both leftName and rightName should be found in schema and tuple.
@@ -124,7 +151,7 @@ public final class Condition {
 							(rightName == null ? String.valueOf(right) : rightName) + " : ");
 	}
 	
-	/*
+	/**
 	 * Method that change a condition to it's string representation.
 	 * @return
 	 * 		The string representation of this condition.

@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map.Entry;
 
 import static java.nio.file.StandardCopyOption.*;
 
@@ -67,8 +68,7 @@ public final class DBPrPro2Main {
 		// Build DBCatalog first.
 		try {
 			DBCatalog.getCatalog().setSchema(args[0]);
-		} 
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.err.println("IOException occurred when building catalog: " + e.toString());
 		}
 		
@@ -76,50 +76,71 @@ public final class DBPrPro2Main {
 		System.out.println("Built catalog:");
 		DBCatalog.getCatalog().print();
 		System.out.println();
-		DBCatalog.getCatalog().gatherStats();
-	}	}
-
-		/* COMMENTED OUT for later uses
 		
-		// Build index if needed.
-//		if (DBCatalog.getCatalog().buildIndexes) {
 			
-			// Clear previous indexes
-			String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/db/indexes/" : "\\db\\indexes\\");
-			clearFolder(DBCatalog.getCatalog().inputPath + append);
-			
-			try {
-				append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/db/index_info.txt" : "\\db\\index_info.txt");
-				BufferedReader indexesReader = new BufferedReader(new FileReader(DBCatalog.getCatalog().inputPath + append));
-				String indexLine = null;
-				while ((indexLine = indexesReader.readLine()) != null) {
-					String [] indexConfig = indexLine.split(" ");
-					boolean clusteredOnKey = indexConfig[2].equals("1");
-					
-					// If clustered, replace the original data with sorted data first. Reuse operators to do so.
-					if (clusteredOnKey) {
+		// Build indexes. Clear previous indexes
+		String append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/db/indexes/" : "\\db\\indexes\\");
+		clearFolder(DBCatalog.getCatalog().inputPath + append);
+		
+		try {
+			for (Entry<String, DBCatalog.RelationInfo> relation : DBCatalog.getCatalog().tables.entrySet()) {
+				for (DBCatalog.IndexInfo indexInfo : relation.getValue().indexes) {
+					if (indexInfo.clustered == 1) {
 						PhyScanBfOp tempScan = new PhyScanBfOp();
-						tempScan.fileName = indexConfig[0];
-						tempScan.alias = indexConfig[0];
+						tempScan.fileName = relation.getKey();
+						tempScan.alias = relation.getKey();
 						PhySortExOp tempSort = new PhySortExOp(10);
 						tempSort.child = tempScan;
 						tempSort.buildSchema();
-						tempSort.sortAttrs.add(tempScan.alias + "." + indexConfig[1]);
+						tempSort.sortAttrs.add(relation.getKey() + "." + indexInfo.keyName);
 						append = (DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/": "db\\data\\");
 						
 						// Output human readable for debugging. Can be omitted.
-						tempSort.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().inputPath + append + indexConfig[0] + "_humanreadable"));
-						Files.move(Paths.get(tempSort.getResultPath()), Paths.get(DBCatalog.getCatalog().inputPath + append + indexConfig[0]), REPLACE_EXISTING);
+						tempSort.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().inputPath + append + relation.getKey() + "_humanreadable"));
+						Files.move(Paths.get(tempSort.getResultPath()), Paths.get(DBCatalog.getCatalog().inputPath + append + relation.getKey()), REPLACE_EXISTING);
 					}
 					
 					// Build index
-					new BTreeIndex(indexConfig[0], indexConfig[1], clusteredOnKey, Integer.valueOf(indexConfig[3]));
+					new BTreeIndex(relation.getKey(), indexInfo.keyName, indexInfo.clustered == 1, indexInfo.order);
 				}
-				indexesReader.close();
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+//		try {
+//			append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/db/index_info.txt" : "\\db\\index_info.txt");
+//			BufferedReader indexesReader = new BufferedReader(new FileReader(DBCatalog.getCatalog().inputPath + append));
+//			String indexLine = null;
+//			while ((indexLine = indexesReader.readLine()) != null) {
+//				String [] indexConfig = indexLine.split(" ");
+//				boolean clusteredOnKey = indexConfig[2].equals("1");
+//				
+//				// If clustered, replace the original data with sorted data first. Reuse operators to do so.
+//				if (clusteredOnKey) {
+//					PhyScanBfOp tempScan = new PhyScanBfOp();
+//					tempScan.fileName = indexConfig[0];
+//					tempScan.alias = indexConfig[0];
+//					PhySortExOp tempSort = new PhySortExOp(10);
+//					tempSort.child = tempScan;
+//					tempSort.buildSchema();
+//					tempSort.sortAttrs.add(tempScan.alias + "." + indexConfig[1]);
+//					append = (DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/": "db\\data\\");
+//					
+//					// Output human readable for debugging. Can be omitted.
+//					tempSort.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().inputPath + append + indexConfig[0] + "_humanreadable"));
+//					Files.move(Paths.get(tempSort.getResultPath()), Paths.get(DBCatalog.getCatalog().inputPath + append + indexConfig[0]), REPLACE_EXISTING);
+//				}
+//				
+//				// Build index
+//				new BTreeIndex(indexConfig[0], indexConfig[1], clusteredOnKey, Integer.valueOf(indexConfig[3]));
+//			}
+//			indexesReader.close();
+//		} catch (Exception e) {
+//			e.printStackTrace();
 //		}
+		
+		
 		
 		// Evaluate queries if needed.
 //		if (DBCatalog.getCatalog().evaluateQueries) {
@@ -134,26 +155,31 @@ public final class DBPrPro2Main {
 					try {
 						// Build logical plan.
 						LogPlan plan = new LogPlan((Select) statement);
+						System.out.println(plan.query);
+						plan.print(null);
+						System.out.println();
 						//LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
 						//System.out.println(logPlanPrinter.printLogPlan(plan));
 						//System.out.println("tables "+DBCatalog.getCatalog().tables.toString());
 						
 						// Build physical plan and run it.
 						PhyPlan phyPlan = new PhyPlan(plan);
-						PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
-						System.out.print(phyPlanPrinter.printPhyPlan(phyPlan));
-	
-						long startTime = System.currentTimeMillis();
-						phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
-						long endTime = System.currentTimeMillis();
-						long runtime = endTime - startTime;
-						System.out.println("Run time of query " + (i - 1) + ": " + runtime + "\n");
-						
-						// Output human readable for debugging. Can be omitted.
-//						phyPlan.root.reset();
-//						phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "Readable"));
-						
-						clearFolder(null);
+						phyPlan.print(null);
+						System.out.println();
+//						PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
+//						System.out.print(phyPlanPrinter.printPhyPlan(phyPlan));
+//	
+//						long startTime = System.currentTimeMillis();
+//						phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
+//						long endTime = System.currentTimeMillis();
+//						long runtime = endTime - startTime;
+//						System.out.println("Run time of query " + (i - 1) + ": " + runtime + "\n");
+//						
+//						// Output human readable for debugging. Can be omitted.
+////						phyPlan.root.reset();
+////						phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "Readable"));
+//						
+//						clearFolder(null);
 	
 					// Catch every exception so that the program can go on to next statement.
 					} catch (Exception e) {
@@ -170,4 +196,3 @@ public final class DBPrPro2Main {
  
 	}
 }
-*/

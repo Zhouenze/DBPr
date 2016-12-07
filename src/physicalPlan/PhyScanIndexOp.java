@@ -13,7 +13,7 @@ import base.Tuple;
 import base.TupleReader;
 import logicalPlan.LogPlan;
 
-/*
+/**
  * This class is index scan operator.
  * @superclass PhyScanOp
  * 
@@ -22,7 +22,7 @@ import logicalPlan.LogPlan;
 public class PhyScanIndexOp extends PhyScanOp {
 	
 	private String indexPath = null;
-	private String keyName = null;				// This is part name!
+	public String keyName = null;				// This is part name!
 	private int keyId = -1;						// ID of key in data.
 	private int lowKey = Integer.MIN_VALUE;		// They are set to this value so that if no condition is given, all the key value is valid.
 	private int highKey = Integer.MAX_VALUE;	// The valid range is [lowKey, highKey].
@@ -47,7 +47,7 @@ public class PhyScanIndexOp extends PhyScanOp {
 	private int nextRidStart;		// Start position of the next valid tuple rid in BB. If this is set to -1, there is no valid tuples anymore. The output of this operator ends.
 	private int nextRidId;			// ID of the next valid tuple rid in corresponding entry.
 	
-	/*
+	/**
 	 * Constructor.
 	 * @param
 	 * 		fileName: file being scanned by this index scan operator.
@@ -93,7 +93,7 @@ public class PhyScanIndexOp extends PhyScanOp {
 		}
 	}
 	
-	/*
+	/**
 	 * Function to initialize this operator.
 	 * This function need to be called when:
 	 * 		1. Index is built.
@@ -172,7 +172,7 @@ public class PhyScanIndexOp extends PhyScanOp {
 		return seekToFirstRid();
 	}
 	
-	/*
+	/**
 	 * This function seeks to the first valid rid according to high-low key and the index.
 	 * @return
 	 * 		whether this rid exists.
@@ -249,7 +249,7 @@ public class PhyScanIndexOp extends PhyScanOp {
 		return false;
 	}
 
-	/*
+	/**
 	 * Method that return next tuple in the output of this node.
 	 * @override from super class PhyOp
 	 * @return next tuple in the output of this node.
@@ -345,7 +345,7 @@ public class PhyScanIndexOp extends PhyScanOp {
 		return null;
 	}
 
-	/*
+	/**
 	 * Method that reset output of this node to the beginning. Return to status just after construction.
 	 * @override from super class PhyOp
 	 */
@@ -365,5 +365,19 @@ public class PhyScanIndexOp extends PhyScanOp {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Get string representation of this operator.
+	 * @override from superclass PhyScanOp
+	 * @see java.lang.Object#toString()
+	 * @return
+	 * 		string representation of this operator.
+	 */
+	@Override
+	public String toString() {
+		String lowS = (lowKey == Integer.MIN_VALUE ? "null" : Integer.toString(lowKey));
+		String highS = (highKey == Integer.MAX_VALUE ? "null" : Integer.toString(highKey));
+		return String.format("IndexScan[%s,%s,%s,%s]", fileName, keyName, lowS, highS);
 	}
 }
