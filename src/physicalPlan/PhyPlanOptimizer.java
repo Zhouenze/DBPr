@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import base.Condition;
@@ -53,6 +54,10 @@ public class PhyPlanOptimizer {
 		Vector<Integer> joinOrder = new Vector<>();					// Order of join represented by index in logPlan.joinChildren.
 		Integer size;				// Output size of this join operator.
 		Integer cost;				// Cost of this sub-join-plan.
+		
+		public String toString() {
+			return String.format("size: %d, cost: %d, order:%s, vValues:%s", size, cost, joinOrder.toString(), vValueDict.toString());
+		}
 	}
 	
 	
@@ -97,16 +102,18 @@ public class PhyPlanOptimizer {
 				LogPlan.HighLowCondition cond = scan.conditions.get(scan.alias + '.' + index.keyName);
 				
 				// If no restriction on this index key, it is strictly worse than full scan so should not be considered.
-				if (cond == null)
+				if (cond == null || (cond.highValue == Integer.MAX_VALUE && cond.lowValue == Integer.MIN_VALUE))
 					continue;
 				
 				double red = 1.0 * (Math.min(attr.highValue, cond.highValue) - Math.max(attr.lowValue, cond.lowValue) + 1) / (attr.highValue - attr.lowValue + 1);
 				Integer cost;
 				
 				if (index.clustered == 1) {
-					cost = (int) (totalPage * red + 3);
+					cost = (int) (Math.ceil(totalPage * red) + 3);
+					
+//					System.out.println(String.format("1 red: %f, totalPage: %d, Cost: %d", red, totalPage, cost));
 				} else {
-					cost = (int) (3 + relationInfo.tupleNum * red);
+					cost = (int) (3 + Math.ceil(relationInfo.tupleNum * red));
 					
 					// Add leaves read to cost. If leaf count not available in DBCatalog, get it.
 					if (index.leafNum == -1) {
@@ -128,7 +135,9 @@ public class PhyPlanOptimizer {
 							e.printStackTrace();
 						}
 					}
-					cost += (int) (index.leafNum * red);
+					cost += (int) Math.ceil(index.leafNum * red);
+					
+//					System.out.println(String.format("0 red: %f, tupleNum: %d, leafNum: %d, Cost: %d", red, relationInfo.tupleNum, index.leafNum, cost));
 				}
 				
 				if (cost < minCost) {
@@ -282,6 +291,8 @@ public class PhyPlanOptimizer {
 			
 			planMap.put(new String(relationSetArray), plan);
 			relationSetArray[i] = '0';
+			
+//			System.out.println(String.format("%s size: %d", scan.alias, plan.size));
 		}
 		
 		// Get small sub-plan one by one and build bigger plans by adding one relation to it.
@@ -385,6 +396,9 @@ public class PhyPlanOptimizer {
 		
 		// In the last iteration, leftPlan will be the plan for whole set.
 		finalJoinOrder = leftPlan.joinOrder;
+		
+		for (Entry<String, JoinOrder> entry : planMap.entrySet())
+			System.out.println(String.format("%s partial join plan: %s", entry.getKey(), entry.getValue()));
 	}
 	
 	/*

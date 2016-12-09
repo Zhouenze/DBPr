@@ -389,9 +389,10 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 						seenAttrs.add(clu.attrs.get(0));
 					
 					out.write(String.format("[%s, equals ", clu.attrs.toString()).getBytes());
-					if (clu.condts.lowValue == clu.condts.highValue)
-						out.write(clu.condts.lowValue.toString().getBytes());
-					else
+					if (clu.condts.lowValue == clu.condts.highValue) {
+						out.write(String.format("%d, min null, max null]\n", clu.condts.lowValue).getBytes());
+						continue;
+					} else
 						out.write("null".getBytes());
 					out.write(", min ".getBytes());
 					if (clu.condts.lowValue > Integer.MIN_VALUE)
