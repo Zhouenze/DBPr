@@ -349,14 +349,17 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 				++layer;
 			}
 			
-			// print order
-			if (orderAttrs != null) {
+			// print order. order operator introduced by distinct need to be here.
+			if (orderAttrs != null || hasDist) {
 				out.write(layers, 0, layer);
-				out.write(String.format("Sort%s\n", orderAttrs.toString()).getBytes());
+				if (orderAttrs != null)
+					out.write(String.format("Sort%s\n", orderAttrs.toString()).getBytes());
+				else
+					out.write("Sort[]\n".getBytes());
 				++layer;
 			}
 			
-			// print projection
+			// print projection. If select all, no projection print.
 			if (projAttrs != null) {
 				out.write(layers, 0, layer);
 				out.write(String.format("Project%s\n", projAttrs.toString()).getBytes());
@@ -370,8 +373,12 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 				out.write(layers, 0, layer);
 				ArrayList<String> conditionsStrings = new ArrayList<>();
 				for (Condition cond : joinConditions)
-					conditionsStrings.add(cond.toString());
-				out.write(String.format("Join[%s]\n", String.join(" AND ", conditionsStrings)).getBytes());
+					if (cond.operator != op.e)			// conditions introduced by union-find are not considered residual conditions.
+						conditionsStrings.add(cond.toString());
+				if (conditionsStrings.isEmpty())
+					out.write("Join[null]\n".getBytes());
+				else
+					out.write(String.format("Join[%s]\n", String.join(" AND ", conditionsStrings)).getBytes());
 				
 				// print union find
 				HashSet<String> seenAttrs = new HashSet<>();
@@ -424,8 +431,10 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 					for (Condition cond : scan.otherConditions)
 						scanConditions.add(cond.toString());
 					
-					out.write(String.format("Select[%s]\n", String.join(" AND ", scanConditions)).getBytes());
-					out.write(layers, 0, layer + 1);
+					if (!scanConditions.isEmpty()) {
+						out.write(String.format("Select[%s]\n", String.join(" AND ", scanConditions)).getBytes());
+						out.write(layers, 0, layer + 1);
+					}
 				}
 				
 				out.write(String.format("Leaf[%s]\n", scan.fileName).getBytes());

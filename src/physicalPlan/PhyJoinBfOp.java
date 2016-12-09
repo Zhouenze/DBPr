@@ -90,7 +90,10 @@ public final class PhyJoinBfOp extends PhyJoinOp {
 		ArrayList<String> conditionsStrings = new ArrayList<>();
 		for (Condition cond : conditions)
 			conditionsStrings.add(cond.toString());
-		return String.format("BF[%s]", String.join(" AND ", conditionsStrings));
+		if (conditionsStrings.isEmpty())
+			return "TNLJ[null]";
+		else
+			return String.format("TNLJ[%s]", String.join(" AND ", conditionsStrings));
 	}
 
 }

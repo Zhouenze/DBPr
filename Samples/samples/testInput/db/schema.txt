@@ -1,2 +1,0 @@
-testData1 A B C D E F
-testData2 G H I J K L

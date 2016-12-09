@@ -3,6 +3,7 @@ package physicalPlan;
 //import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 //import java.util.ArrayList;
 //import java.util.HashMap;
 import java.util.Map.Entry;
@@ -447,11 +448,12 @@ public final class PhyPlan implements PhyOpVisitor {
 		
 		// If select everything, modify schema so that projection will change output order.
 		if (projOp.selectAll) {
+			projOp.schema = new HashMap<>();
 			int count = 0;
 			for (LogPlan.Scan scan : logPlan.joinChildren) {		// joinChildren follows output order.
 				DBCatalog.RelationInfo relationInfo = DBCatalog.getCatalog().tables.get(scan.fileName);
 				for (DBCatalog.AttrInfo attrInfo : relationInfo.attrs)
-					projOp.schema.replace(scan.alias + '.' + attrInfo.name, count++);
+					projOp.schema.put(scan.alias + '.' + attrInfo.name, count++);
 			}
 		}
 		
@@ -601,11 +603,15 @@ public final class PhyPlan implements PhyOpVisitor {
 	 */
 	@Override
 	public void visit(PhyProjOp PhyProjOp) {
-		printString += new String(layers, 0, layer);
-		printString += String.format("Project%s\n", PhyProjOp.projAttrs.toString());
-		++layer;
-		PhyProjOp.child.accept(this);
-		--layer;
+		if (logPlan.projAttrs != null) {
+			printString += new String(layers, 0, layer);
+			printString += String.format("Project%s\n", PhyProjOp.projAttrs.toString());
+			++layer;
+			PhyProjOp.child.accept(this);
+			--layer;
+		} else {
+			PhyProjOp.child.accept(this);
+		}
 	}
 
 	/**

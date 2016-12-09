@@ -1,5 +1,4 @@
 package base;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -15,7 +14,6 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import physicalPlan.PhyPlan;
-import physicalPlan.PhyPlanPrintVisitor;
 import physicalPlan.PhyScanBfOp;
 import physicalPlan.PhySortExOp;
 
@@ -27,7 +25,7 @@ import physicalPlan.PhySortExOp;
  */
 public final class DBPrPro2Main {
 	
-	/*
+	/**
 	 * Function that delete everything referred by path.
 	 * 
 	 * @param
@@ -56,12 +54,10 @@ public final class DBPrPro2Main {
 	}
 
 
-	/*
+	/**
 	 * main method of this project.
 	 * @param args[0]
 	 * 		input folder path without / at the end.
-	 * @param args[1]
-	 * 		output folder path without / at the end.
 	 */
 	public static void main(String[] args) {
 		
@@ -108,91 +104,53 @@ public final class DBPrPro2Main {
 			e.printStackTrace();
 		}
 		
-//		try {
-//			append = (DBCatalog.getCatalog().inputPath.contains("/") ? "/db/index_info.txt" : "\\db\\index_info.txt");
-//			BufferedReader indexesReader = new BufferedReader(new FileReader(DBCatalog.getCatalog().inputPath + append));
-//			String indexLine = null;
-//			while ((indexLine = indexesReader.readLine()) != null) {
-//				String [] indexConfig = indexLine.split(" ");
-//				boolean clusteredOnKey = indexConfig[2].equals("1");
-//				
-//				// If clustered, replace the original data with sorted data first. Reuse operators to do so.
-//				if (clusteredOnKey) {
-//					PhyScanBfOp tempScan = new PhyScanBfOp();
-//					tempScan.fileName = indexConfig[0];
-//					tempScan.alias = indexConfig[0];
-//					PhySortExOp tempSort = new PhySortExOp(10);
-//					tempSort.child = tempScan;
-//					tempSort.buildSchema();
-//					tempSort.sortAttrs.add(tempScan.alias + "." + indexConfig[1]);
-//					append = (DBCatalog.getCatalog().inputPath.contains("/") ? "db/data/": "db\\data\\");
-//					
-//					// Output human readable for debugging. Can be omitted.
-//					tempSort.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().inputPath + append + indexConfig[0] + "_humanreadable"));
-//					Files.move(Paths.get(tempSort.getResultPath()), Paths.get(DBCatalog.getCatalog().inputPath + append + indexConfig[0]), REPLACE_EXISTING);
-//				}
-//				
-//				// Build index
-//				new BTreeIndex(indexConfig[0], indexConfig[1], clusteredOnKey, Integer.valueOf(indexConfig[3]));
-//			}
-//			indexesReader.close();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-		
-		
 		
 		// Evaluate queries if needed.
-//		if (DBCatalog.getCatalog().evaluateQueries) {
-			try {
-				// Initialize a SqlParser.
-				CCJSqlParser sqlParser = new CCJSqlParser(new FileReader(DBCatalog.getCatalog().inputPath + "queries.sql"));
-				Statement statement;
-				
-				// For every select statement.
-				int i = 1;
-				while ((statement = sqlParser.Statement()) != null) {
-					try {
-						// Build logical plan.
-						LogPlan plan = new LogPlan((Select) statement);
-						System.out.println(plan.query);
-						plan.print(null);
-						System.out.println();
-						//LogPlanPrintVisitor logPlanPrinter = new LogPlanPrintVisitor();
-						//System.out.println(logPlanPrinter.printLogPlan(plan));
-						//System.out.println("tables "+DBCatalog.getCatalog().tables.toString());
-						
-						// Build physical plan and run it.
-						PhyPlan phyPlan = new PhyPlan(plan);
-						phyPlan.print(null);
-						System.out.println();
-//						PhyPlanPrintVisitor phyPlanPrinter = new PhyPlanPrintVisitor();
-//						System.out.print(phyPlanPrinter.printPhyPlan(phyPlan));
-//	
-//						long startTime = System.currentTimeMillis();
-//						phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i++));
-//						long endTime = System.currentTimeMillis();
-//						long runtime = endTime - startTime;
-//						System.out.println("Run time of query " + (i - 1) + ": " + runtime + "\n");
-//						
-//						// Output human readable for debugging. Can be omitted.
-////						phyPlan.root.reset();
-////						phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "Readable"));
-//						
-//						clearFolder(null);
-	
-					// Catch every exception so that the program can go on to next statement.
-					} catch (Exception e) {
-						System.err.println("Exception occurred for statement: " + statement);
-						System.err.println(e.toString());
-						e.printStackTrace();
-					}
+		try {
+			// Initialize a SqlParser.
+			CCJSqlParser sqlParser = new CCJSqlParser(new FileReader(DBCatalog.getCatalog().inputPath + "queries.sql"));
+			Statement statement;
+			
+			// For every select statement.
+			int i = 1;
+			while ((statement = sqlParser.Statement()) != null) {
+				try {
+					// Build logical plan.
+					LogPlan plan = new LogPlan((Select) statement);
+					System.out.println(plan.query);
+					plan.print(null);
+					System.out.println();
+					plan.print(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i + "_logicalplan"));
+					
+					// Build physical plan and run it.
+					PhyPlan phyPlan = new PhyPlan(plan);
+					phyPlan.print(null);
+					System.out.println();
+					phyPlan.print(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i + "_physicalplan"));
+					
+					long startTime = System.currentTimeMillis();
+					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + i));
+					long endTime = System.currentTimeMillis();
+					long runtime = endTime - startTime;
+					System.out.println("Run time of query " + (i++) + ": " + runtime + "\n");
+					
+					// Output human readable for debugging. Can be omitted.
+					phyPlan.root.reset();
+					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "_humanreadable"));
+					
+					clearFolder(null);
+
+				// Catch every exception so that the program can go on to next statement.
+				} catch (Exception e) {
+					System.err.println("Exception occurred for statement: " + statement);
+					System.err.println(e.toString());
+					e.printStackTrace();
 				}
-				
-			} catch (Exception e) {
-				System.err.println("Exception occurred with CCJSqlParser: " + e.toString());
 			}
-//		}
+			
+		} catch (Exception e) {
+			System.err.println("Exception occurred with CCJSqlParser: " + e.toString());
+		}
  
 	}
 }

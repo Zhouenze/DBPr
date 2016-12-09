@@ -273,7 +273,10 @@ public final class PhyJoinSMJOp extends PhyJoinOp{
 			conditionsStrings.add(cond.toString());
 		for (Condition cond : extraConditions)
 			conditionsStrings.add(cond.toString());
-		return String.format("SMJ[%s]", String.join(" AND ", conditionsStrings));
+		if (conditionsStrings.isEmpty())
+			return "SMJ[null]";
+		else
+			return String.format("SMJ[%s]", String.join(" AND ", conditionsStrings));
 	}
 
 }

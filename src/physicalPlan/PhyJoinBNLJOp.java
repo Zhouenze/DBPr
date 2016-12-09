@@ -170,7 +170,10 @@ public final class PhyJoinBNLJOp extends PhyJoinOp {
 		ArrayList<String> conditionsStrings = new ArrayList<>();
 		for (Condition cond : conditions)
 			conditionsStrings.add(cond.toString());
-		return String.format("BNLJ[%s]", String.join(" AND ", conditionsStrings));
+		if (conditionsStrings.isEmpty())
+			return "BNLJ[null]";
+		else
+			return String.format("BNLJ[%s]", String.join(" AND ", conditionsStrings));
 	}
 
 }
