@@ -118,23 +118,23 @@ public final class DBPrPro2Main {
 					// Build logical plan.
 					LogPlan plan = new LogPlan((Select) statement);
 					System.out.println(plan.query);
-					plan.print(null);
-					System.out.println();
+//					plan.print(null);
+//					System.out.println();
 					plan.print(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i++) + "_logicalplan"));
 					
 					// Build physical plan and run it.
 					PhyPlan phyPlan = new PhyPlan(plan);
-					phyPlan.print(null);
-					System.out.println();
+//					phyPlan.print(null);
+//					System.out.println();
 					phyPlan.print(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "_physicalplan"));
 					
-//					long startTime = System.currentTimeMillis();
-//					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1)));
-//					long endTime = System.currentTimeMillis();
-//					long runtime = endTime - startTime;
-//					System.out.println("Run time of query " + (i-1) + ": " + runtime + "\n");
-//					
-//					// Output human readable for debugging. Can be omitted.
+					long startTime = System.currentTimeMillis();
+					phyPlan.root.dump(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1)));
+					long endTime = System.currentTimeMillis();
+					long runtime = endTime - startTime;
+					System.out.println("Run time of query " + (i-1) + ": " + runtime + "\n");
+					
+					// Output human readable for debugging. Can be omitted.
 //					phyPlan.root.reset();
 //					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "_humanreadable"));
 					

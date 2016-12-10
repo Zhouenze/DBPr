@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Vector;
 
 import base.Condition;
@@ -52,11 +51,11 @@ public class PhyPlanOptimizer {
 	private class JoinOrder {
 		HashMap<String, Integer> vValueDict = new HashMap<>();		// V-value dictionary of this operator.
 		Vector<Integer> joinOrder = new Vector<>();					// Order of join represented by index in logPlan.joinChildren.
-		Integer size;				// Output size of this join operator.
-		Integer cost;				// Cost of this sub-join-plan.
+		Double size;				// Output size of this join operator.
+		Double cost;				// Cost of this sub-join-plan.
 		
 		public String toString() {
-			return String.format("size: %d, cost: %d, order:%s, vValues:%s", size, cost, joinOrder.toString(), vValueDict.toString());
+			return String.format("size: %f, cost: %f, order:%s, vValues:%s", size, cost, joinOrder.toString(), vValueDict.toString());
 		}
 	}
 	
@@ -197,6 +196,13 @@ public class PhyPlanOptimizer {
 			}
 		}
 		
+		/*
+		 * This function reset this generator to re output all the string again.
+		 */
+//		public void reset() {
+//			traverse = 1;
+//		}
+		
 		/**
 		 * This function return strings one by one.
 		 * @return
@@ -265,7 +271,7 @@ public class PhyPlanOptimizer {
 			
 			JoinOrder plan = new JoinOrder();
 			plan.joinOrder.add(i);
-			plan.cost = 0;
+			plan.cost = 0.0;
 			
 			double tempSize = relation.tupleNum;
 			for (DBCatalog.AttrInfo attrInfo : relation.attrs) {
@@ -282,12 +288,13 @@ public class PhyPlanOptimizer {
 			}
 			
 			// If size < 1, it should be 1.
-			plan.size = Math.max((int) Math.ceil(tempSize), 1);
+			plan.size = Math.max(tempSize, 1.0);
+			int sizeInt = (int) Math.ceil(plan.size);
 			
 			// No v-value should be higher than size.
 			for (DBCatalog.AttrInfo attrInfo : relation.attrs)
 				plan.vValueDict.replace(	scan.alias + '.' + attrInfo.name,
-											Math.min(plan.vValueDict.get(scan.alias + '.' + attrInfo.name), plan.size));
+											Math.min(plan.vValueDict.get(scan.alias + '.' + attrInfo.name), sizeInt));
 			
 			planMap.put(new String(relationSetArray), plan);
 			relationSetArray[i] = '0';
@@ -310,7 +317,7 @@ public class PhyPlanOptimizer {
 				
 				relationSetArray[i] = '1';			// Otherwise try adding ith relation to plan.
 				
-				Integer cost = (leftPlan.joinOrder.size() < 2 ? 0 : leftPlan.cost + leftPlan.size);
+				Double cost = (leftPlan.joinOrder.size() < 2 ? 0.0 : leftPlan.cost + leftPlan.size);
 				
 				// If a better plan already exists in planMap, continue.
 				if (planMap.containsKey(new String(relationSetArray)) && planMap.get(new String(relationSetArray)).cost <= cost) {
@@ -347,7 +354,8 @@ public class PhyPlanOptimizer {
 				for (Condition cond : logPlan.joinConditions) {
 					
 					// Non-equal conditions are neglected.
-					if (plan.vValueDict.containsKey(cond.leftName) && plan.vValueDict.containsKey(cond.rightName) && cond.operator == Condition.op.e) {
+					if ((leftPlan.vValueDict.containsKey(cond.leftName) && rightPlan.vValueDict.containsKey(cond.rightName) && cond.operator == Condition.op.e) || 
+						(leftPlan.vValueDict.containsKey(cond.rightName) && rightPlan.vValueDict.containsKey(cond.leftName) && cond.operator == Condition.op.e)	) {
 						attrCluster = logPlan.find(cond.leftName);			// leftName and rightName should be in the same union.
 						if (!vValueOfCluster.containsKey(attrCluster)) {
 							vValueOfCluster.put(attrCluster, Math.max(plan.vValueDict.get(cond.leftName), plan.vValueDict.get(cond.rightName)));
@@ -358,11 +366,15 @@ public class PhyPlanOptimizer {
 					}
 				}
 				
-				// Join size is cross product divided by vValue of each union.
+				// Join size is cross product divided by vValue of each union. Need 1.0 here in case integer overflow.
 				double joinSize = leftPlan.size * rightPlan.size;
+				
 				for (Integer clusterV : vValueOfCluster.values())
 					joinSize /= clusterV;
-				plan.size = joinSize > 1 ? (int) Math.ceil(joinSize) : 1;	// Join size will be >= 1
+								
+				plan.size = joinSize > 1.0 ? joinSize : 1.0;	// Join size will be >= 1
+				
+//				System.out.println(String.format("%s %s %f %d", new String(relationSetArray), vValueOfCluster.values(), joinSize, plan.size));
 				
 				// Get minimum vValue of each union.
 				vValueOfCluster.clear();
@@ -380,7 +392,7 @@ public class PhyPlanOptimizer {
 					attrCluster = logPlan.find(attrName);
 					
 					// vValue should not be bigger than output size but should neither be smaller than 1.
-					Integer vValue = Math.min(plan.size, vValueOfCluster.get(attrCluster));
+					Integer vValue = Math.min((int) Math.ceil(plan.size), vValueOfCluster.get(attrCluster));
 					plan.vValueDict.replace(attrName, Math.max(1, vValue));
 				}
 				
@@ -397,8 +409,10 @@ public class PhyPlanOptimizer {
 		// In the last iteration, leftPlan will be the plan for whole set.
 		finalJoinOrder = leftPlan.joinOrder;
 		
-		for (Entry<String, JoinOrder> entry : planMap.entrySet())
-			System.out.println(String.format("%s partial join plan: %s", entry.getKey(), entry.getValue()));
+//		mySetStringGenerator.reset();
+//		String key;
+//		while ((key = mySetStringGenerator.getNextString()) != null)
+//			System.out.println(String.format("%s partial join plan: %s", key, planMap.get(key)));
 	}
 	
 	/*

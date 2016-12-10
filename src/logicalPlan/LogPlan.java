@@ -389,12 +389,11 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 						seenAttrs.add(clu.attrs.get(0));
 					
 					out.write(String.format("[%s, equals ", clu.attrs.toString()).getBytes());
-					if (clu.condts.lowValue == clu.condts.highValue) {
+					if (clu.condts.lowValue.equals(clu.condts.highValue)) {
 						out.write(String.format("%d, min null, max null]\n", clu.condts.lowValue).getBytes());
 						continue;
 					} else
-						out.write("null".getBytes());
-					out.write(", min ".getBytes());
+						out.write("null, min ".getBytes());
 					if (clu.condts.lowValue > Integer.MIN_VALUE)
 						out.write(clu.condts.lowValue.toString().getBytes());
 					else
@@ -419,7 +418,7 @@ public final class LogPlan implements SelectVisitor, FromItemVisitor {
 					ArrayList<String> scanConditions = new ArrayList<>();
 					
 					for (Entry<String, HighLowCondition> condEntry : scan.conditions.entrySet()) {
-						if (condEntry.getValue().highValue == condEntry.getValue().lowValue)
+						if (condEntry.getValue().highValue.equals(condEntry.getValue().lowValue))
 							scanConditions.add(condEntry.getKey() + " = " + condEntry.getValue().lowValue);
 						else {
 							if (condEntry.getValue().highValue < Integer.MAX_VALUE)
