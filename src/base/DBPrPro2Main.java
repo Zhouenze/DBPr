@@ -135,8 +135,8 @@ public final class DBPrPro2Main {
 					System.out.println("Run time of query " + (i-1) + ": " + runtime + "\n");
 					
 					// Output human readable for debugging. Can be omitted.
-//					phyPlan.root.reset();
-//					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "_humanreadable"));
+					phyPlan.root.reset();
+					phyPlan.root.dumpReadable(new FileOutputStream(DBCatalog.getCatalog().outputPath + "query" + (i-1) + "_humanreadable"));
 					
 					clearFolder(null);
 
